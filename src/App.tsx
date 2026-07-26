@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Header, NavigationTab } from './components/Header';
 import { Dashboard } from './components/Dashboard';
 import { ChallengeSection } from './components/ChallengeSection';
@@ -9,7 +9,6 @@ import { UserProfileView } from './components/UserProfileView';
 import { CommunityFeed } from './components/CommunityFeed';
 import { QrModal } from './components/QrModal';
 import { FocusTimerModal } from './components/FocusTimerModal';
-
 
 import {
   INITIAL_USER_PROFILE,
@@ -24,7 +23,20 @@ import { Challenge, CalendarEvent, NoteItem, HighScore, CommunityPost, UserProfi
 
 export default function App() {
   const [activeTab, setActiveTab] = useState<NavigationTab>('dashboard');
-  const [user, setUser] = useState<UserProfile>(INITIAL_USER_PROFILE);
+  const [user, setUser] = useState<UserProfile>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('app_user_profile');
+      if (saved) {
+        try {
+          return { ...INITIAL_USER_PROFILE, ...JSON.parse(saved) };
+        } catch (e) {
+          console.error('Error loading user profile:', e);
+        }
+      }
+    }
+    return INITIAL_USER_PROFILE;
+  });
+
   const [challenges, setChallenges] = useState<Challenge[]>(INITIAL_CHALLENGES);
   const [events, setEvents] = useState<CalendarEvent[]>(INITIAL_CALENDAR_EVENTS);
   const [notes, setNotes] = useState<NoteItem[]>(INITIAL_NOTES);
@@ -32,6 +44,15 @@ export default function App() {
   const [communityPosts, setCommunityPosts] = useState<CommunityPost[]>(INITIAL_COMMUNITY_POSTS);
   const [isQrModalOpen, setIsQrModalOpen] = useState(false);
   const [isFocusTimerOpen, setIsFocusTimerOpen] = useState(false);
+
+  // Sync user profile to localStorage
+  useEffect(() => {
+    try {
+      localStorage.setItem('app_user_profile', JSON.stringify(user));
+    } catch (e) {
+      console.error('Error saving user profile:', e);
+    }
+  }, [user]);
 
   const currentAppUrl = typeof window !== 'undefined' ? window.location.origin : 'https://llave-desafio.app';
 
@@ -334,6 +355,7 @@ export default function App() {
         {activeTab === 'profile' && (
           <UserProfileView
             user={user}
+            onUpdateProfile={(updated) => setUser((u) => ({ ...u, ...updated }))}
             onUpdateTitle={(title) => setUser((u) => ({ ...u, title }))}
             onSelectTheme={(selectedTheme) => setUser((u) => ({ ...u, selectedTheme }))}
           />
