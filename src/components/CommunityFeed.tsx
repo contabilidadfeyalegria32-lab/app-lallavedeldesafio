@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { CommunityPost, PostComment, ChallengeCategory } from '../types';
+import { CommunityPost, PostComment, ChallengeCategory, UserProfile } from '../types';
 import {
   Users, Heart, MessageSquare, Repeat2, Sparkles, Send,
   Image as ImageIcon, Filter, X, Flame, Trophy, Share2,
@@ -10,6 +10,7 @@ import { playAudioEffect } from '../utils/audio';
 
 interface CommunityFeedProps {
   posts: CommunityPost[];
+  currentUser: UserProfile;
   onAddPost: (post: CommunityPost) => void;
   onLikePost: (id: string) => void;
   onAddComment?: (postId: string, text: string) => void;
@@ -36,6 +37,7 @@ const PRESET_IMAGES = [
 
 export const CommunityFeed: React.FC<CommunityFeedProps> = ({
   posts,
+  currentUser,
   onAddPost,
   onLikePost,
   onAddComment,
@@ -64,10 +66,14 @@ export const CommunityFeed: React.FC<CommunityFeedProps> = ({
 
     const finalImage = customImageUrl.trim() || selectedPresetImage || undefined;
 
+    const displayName = currentUser.username
+      ? `${currentUser.name} (${currentUser.username})`
+      : currentUser.name;
+
     const newPost: CommunityPost = {
       id: Date.now().toString(),
-      username: 'Alex Rivera (Tú)',
-      avatarUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=250&q=80',
+      username: displayName,
+      avatarUrl: currentUser.avatarUrl,
       challengeTitle: challengeTitle.trim() || 'Logro de Estudio o Hábito Diario',
       category: selectedCategory,
       comment: commentText.trim(),
@@ -212,11 +218,14 @@ export const CommunityFeed: React.FC<CommunityFeedProps> = ({
           {/* User input + title */}
           <div className="flex items-start gap-3">
             <img
-              src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=250&q=80"
-              alt="Alex"
-              className="w-10 h-10 rounded-full object-cover border-2 border-indigo-500/30"
+              src={currentUser.avatarUrl}
+              alt={currentUser.name}
+              className="w-10 h-10 rounded-full object-cover border-2 border-indigo-500/30 shrink-0"
             />
             <div className="flex-1 space-y-2">
+              <div className="text-[11px] font-bold text-slate-600 flex items-center justify-between">
+                <span>Publicando como: <strong className="text-indigo-600 font-extrabold">{currentUser.name}</strong> <span className="font-mono text-slate-400">{currentUser.username}</span></span>
+              </div>
               <input
                 type="text"
                 placeholder="¿Qué reto o tarea completaste hoy? (ej. 100% en guía de historia)..."

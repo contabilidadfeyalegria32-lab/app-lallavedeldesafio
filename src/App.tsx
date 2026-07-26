@@ -198,10 +198,12 @@ export default function App() {
   const handleAddComment = (postId: string, text: string) => {
     if (!text.trim()) return;
 
+    const displayName = user.username ? `${user.name} (${user.username})` : user.name;
+
     const newComment = {
       id: Date.now().toString(),
-      username: 'Alex Rivera (Tú)',
-      avatarUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=250&q=80',
+      username: displayName,
+      avatarUrl: user.avatarUrl,
       text: text.trim(),
       timestamp: 'Ahora mismo',
       likes: 0,
@@ -266,11 +268,13 @@ export default function App() {
       })
     );
 
+    const displayName = user.username ? `${user.name} (${user.username})` : user.name;
+
     // Create new post representing the repost
     const newRepostPost: CommunityPost = {
       id: Date.now().toString(),
-      username: 'Alex Rivera (Tú)',
-      avatarUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=250&q=80',
+      username: displayName,
+      avatarUrl: user.avatarUrl,
       challengeTitle: originalPost.challengeTitle,
       category: originalPost.category,
       comment: quoteText?.trim() ? `💬 "${quoteText.trim()}"` : `🔁 Reposteó la publicación de ${originalPost.username}: "${originalPost.comment}"`,
@@ -364,6 +368,7 @@ export default function App() {
         {activeTab === 'community' && (
           <CommunityFeed
             posts={communityPosts}
+            currentUser={user}
             onAddPost={handleAddPost}
             onLikePost={handleLikePost}
             onAddComment={handleAddComment}
