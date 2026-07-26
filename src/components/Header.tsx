@@ -1,5 +1,5 @@
 import React from 'react';
-import { Key, LayoutDashboard, Target, Gamepad2, Calendar, FileText, User, Users, QrCode, Flame, Award, Timer, Sparkles } from 'lucide-react';
+import { Key, LayoutDashboard, Target, Gamepad2, Calendar, FileText, User, Users, QrCode, Flame, Award, Timer, LogOut } from 'lucide-react';
 import { UserProfile } from '../types';
 
 export type NavigationTab = 'dashboard' | 'challenges' | 'game' | 'calendar' | 'notes' | 'profile' | 'community';
@@ -10,6 +10,7 @@ interface HeaderProps {
   user: UserProfile;
   onOpenQrModal: () => void;
   onOpenFocusTimer: () => void;
+  onLogout?: () => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -18,6 +19,7 @@ export const Header: React.FC<HeaderProps> = ({
   user,
   onOpenQrModal,
   onOpenFocusTimer,
+  onLogout,
 }) => {
   const navItems: { id: NavigationTab; label: string; icon: React.FC<{ className?: string }> }[] = [
     { id: 'dashboard', label: 'Inicio', icon: LayoutDashboard },
@@ -110,12 +112,40 @@ export const Header: React.FC<HeaderProps> = ({
           {/* QR Code Action Button */}
           <button
             onClick={onOpenQrModal}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-extrabold text-white bg-slate-900 hover:bg-slate-800 rounded-2xl shadow-xs transition-all cursor-pointer"
+            className="inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 text-xs font-extrabold text-white bg-slate-900 hover:bg-slate-800 rounded-2xl shadow-xs transition-all cursor-pointer"
             title="Ver / Escanear Credencial Digital QR de estudiante"
           >
             <QrCode className="w-4 h-4 text-amber-400" />
             <span className="hidden sm:inline">Pase VIP</span>
           </button>
+
+          {/* Logged in user profile avatar & Logout */}
+          <div className="flex items-center gap-1.5 pl-1 border-l border-slate-200">
+            <button
+              onClick={() => setActiveTab('profile')}
+              className="flex items-center gap-2 p-1 rounded-xl hover:bg-slate-100 transition-colors cursor-pointer group"
+              title="Ir a mi perfil"
+            >
+              <img
+                src={user.avatarUrl}
+                alt={user.name}
+                className="w-8 h-8 rounded-xl object-cover border border-indigo-400 group-hover:scale-105 transition-transform"
+              />
+              <span className="hidden xl:inline text-xs font-bold text-slate-800 max-w-[100px] truncate">
+                {user.name.split(' ')[0]}
+              </span>
+            </button>
+
+            {onLogout && (
+              <button
+                onClick={onLogout}
+                className="p-1.5 rounded-xl text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer"
+                title="Cerrar sesión"
+              >
+                <LogOut className="w-4 h-4" />
+              </button>
+            )}
+          </div>
         </div>
 
       </div>

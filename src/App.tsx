@@ -9,6 +9,7 @@ import { UserProfileView } from './components/UserProfileView';
 import { CommunityFeed } from './components/CommunityFeed';
 import { QrModal } from './components/QrModal';
 import { FocusTimerModal } from './components/FocusTimerModal';
+import { AuthModal, AuthAccount } from './components/AuthModal';
 
 import {
   INITIAL_USER_PROFILE,
@@ -23,6 +24,31 @@ import { Challenge, CalendarEvent, NoteItem, HighScore, CommunityPost, UserProfi
 
 export default function App() {
   const [activeTab, setActiveTab] = useState<NavigationTab>('dashboard');
+  
+  // Authentication & Session state
+  const [savedAccounts, setSavedAccounts] = useState<AuthAccount[]>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('app_registered_accounts');
+      if (saved) {
+        try {
+          return JSON.parse(saved);
+        } catch (e) {
+          console.error('Error loading saved accounts:', e);
+        }
+      }
+    }
+    return [];
+  });
+
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() => {
+    if (typeof window !== 'undefined') {
+      const activeId = localStorage.getItem('app_active_account_id');
+      const hasAuthSession = localStorage.getItem('app_auth_session');
+      return Boolean(activeId || hasAuthSession);
+    }
+    return false;
+  });
+
   const [user, setUser] = useState<UserProfile>(() => {
     if (typeof window !== 'undefined') {
       const saved = localStorage.getItem('app_user_profile');
@@ -47,12 +73,37 @@ export default function App() {
 
   // Sync user profile to localStorage
   useEffect(() => {
-    try {
-      localStorage.setItem('app_user_profile', JSON.stringify(user));
-    } catch (e) {
-      console.error('Error saving user profile:', e);
+    if (isAuthenticated && typeof window !== 'undefined') {
+      try {
+        localStorage.setItem('app_user_profile', JSON.stringify(user));
+      } catch (e) {
+        console.error('Error saving user profile:', e);
+      }
     }
-  }, [user]);
+  }, [user, isAuthenticated]);
+
+  // Auth Handlers
+  const handleLoginSuccess = (userProfile: UserProfile) => {
+    setUser(userProfile);
+    setIsAuthenticated(true);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('app_auth_session', 'true');
+      localStorage.setItem('app_user_profile', JSON.stringify(userProfile));
+      // Refresh saved accounts list
+      const saved = localStorage.getItem('app_registered_accounts');
+      if (saved) {
+        try { setSavedAccounts(JSON.parse(saved)); } catch (e) {}
+      }
+    }
+  };
+
+  const handleLogout = () => {
+    setIsAuthenticated(false);
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('app_auth_session');
+      localStorage.removeItem('app_active_account_id');
+    }
+  };
 
   const currentAppUrl = typeof window !== 'undefined' ? window.location.origin : 'https://llave-desafio.app';
 
@@ -298,6 +349,14 @@ export default function App() {
   return (
     <div className="min-h-screen bg-slate-50 text-slate-800 flex flex-col font-sans selection:bg-indigo-500 selection:text-white">
       
+      {/* Auth Modal Overlay if not logged in */}
+      {!isAuthenticated && (
+        <AuthModal
+          savedAccounts={savedAccounts}
+          onLoginSuccess={handleLoginSuccess}
+        />
+      )}
+
       {/* Navigation Header */}
       <Header
         activeTab={activeTab}
@@ -305,6 +364,7 @@ export default function App() {
         user={user}
         onOpenQrModal={() => setIsQrModalOpen(true)}
         onOpenFocusTimer={() => setIsFocusTimerOpen(true)}
+        onLogout={handleLogout}
       />
 
       {/* Main App Content View */}
