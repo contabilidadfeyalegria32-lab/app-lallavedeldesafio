@@ -1,0 +1,10 @@
+{
+  "name": "Remix: La Llave del Desafío",
+  "description": "Plataforma web interactiva para el desarrollo personal mediante desafíos diarios de bienestar, salud, educación y entretenimiento, con juego de laberinto 2D, calendario inteligente, bloc de notas y acceso rápido vía QR.",
+  "requestFramePermissions": [
+    "camera"
+  ],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
