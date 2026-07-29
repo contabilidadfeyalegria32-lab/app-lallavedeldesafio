@@ -2,6 +2,7 @@ import React from 'react';
 import { UserProfile, Challenge, CalendarEvent, NoteItem } from '../types';
 import { Sparkles, Flame, Award, Coins, CheckCircle2, Circle, Target, Gamepad2, Calendar as CalendarIcon, FileText, ArrowRight, Zap, Trophy, ShieldCheck, HeartPulse, BookOpen, Smile, Plus, Timer, Brain } from 'lucide-react';
 import { NavigationTab } from './Header';
+import { MilestonesSection } from './MilestonesSection';
 
 interface DashboardProps {
   user: UserProfile;
@@ -11,6 +12,7 @@ interface DashboardProps {
   onToggleChallenge: (id: string) => void;
   onNavigate: (tab: NavigationTab) => void;
   onOpenFocusTimer: () => void;
+  onClaimMilestone?: (milestoneXp: number) => void;
 }
 
 export const Dashboard: React.FC<DashboardProps> = ({
@@ -21,10 +23,14 @@ export const Dashboard: React.FC<DashboardProps> = ({
   onToggleChallenge,
   onNavigate,
   onOpenFocusTimer,
+  onClaimMilestone,
 }) => {
-  const dailyChallenges = challenges.filter((c) => c.frequency === 'daily');
-  const completedDailyCount = dailyChallenges.filter((c) => c.completed).length;
-  const progressPercent = dailyChallenges.length > 0 ? Math.round((completedDailyCount / dailyChallenges.length) * 100) : 0;
+  // Daily challenges logic: Max 6 active daily challenges per day, completed ones are removed from active view
+  const allDaily = challenges.filter((c) => c.frequency === 'daily');
+  const activeDailyChallenges = allDaily.filter((c) => !c.completed).slice(0, 6);
+  const completedDailyCount = allDaily.filter((c) => c.completed).length;
+  const totalDailySlotCount = Math.max(6, activeDailyChallenges.length + completedDailyCount);
+  const progressPercent = totalDailySlotCount > 0 ? Math.round((completedDailyCount / totalDailySlotCount) * 100) : 0;
 
   const categories = [
     { id: 'educacion', title: 'Escuela & Estudio', icon: '📚', bg: 'bg-indigo-50 text-indigo-800 border-indigo-200', count: challenges.filter(c => c.category === 'educacion').length },
@@ -53,7 +59,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
             </h1>
 
             <p className="text-slate-300 text-xs sm:text-sm leading-relaxed">
-              Puntaje de Rango: <span className="font-bold text-amber-300">{user.title}</span> (Nivel {user.level}). Hoy has completado <span className="font-bold text-emerald-400">{completedDailyCount} de {dailyChallenges.length}</span> misiones diarias.
+              Puntaje de Rango: <span className="font-bold text-amber-300">{user.title}</span> (Nivel {user.level}). Hoy has completado <span className="font-bold text-emerald-400">{completedDailyCount} misiones</span>.
             </p>
 
             {/* XP Level Bar */}
@@ -121,6 +127,14 @@ export const Dashboard: React.FC<DashboardProps> = ({
         ))}
       </div>
 
+      {/* 1,000 XP Milestone Rewards Chests */}
+      {onClaimMilestone && (
+        <MilestonesSection
+          user={user}
+          onClaimMilestone={onClaimMilestone}
+        />
+      )}
+
       {/* Daily Challenges Progress Section */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
         
@@ -143,67 +157,67 @@ export const Dashboard: React.FC<DashboardProps> = ({
             </div>
           </div>
 
-          {/* List of daily challenges */}
+          {/* List of daily challenges (Max 6 active daily, auto-eliminated upon completion) */}
           <div className="space-y-3">
-            {dailyChallenges.map((c) => (
-              <div
-                key={c.id}
-                className={`p-4 rounded-2xl border transition-all flex items-start justify-between gap-4 ${
-                  c.completed
-                    ? 'bg-emerald-50/60 border-emerald-200 text-slate-800'
-                    : 'bg-white border-slate-200/80 hover:border-indigo-300 shadow-2xs'
-                }`}
-              >
-                <div className="flex items-start gap-3 flex-1">
+            <div className="flex items-center justify-between text-[11px] font-semibold text-slate-500 bg-slate-50 px-3 py-1.5 rounded-xl border border-slate-200/80">
+              <span>⚡ Máximo 6 desafíos diarios activos a la vez</span>
+              <span>Al completarse, se eliminan de tu lista activa</span>
+            </div>
+
+            {activeDailyChallenges.length === 0 ? (
+              <div className="text-center py-8 bg-emerald-50/50 rounded-2xl border-2 border-dashed border-emerald-200 p-6 space-y-2">
+                <div className="w-12 h-12 mx-auto rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center font-bold text-xl">
+                  🎉
+                </div>
+                <h3 className="text-sm font-extrabold text-emerald-950">¡Completaste todas tus misiones diarias!</h3>
+                <p className="text-xs text-emerald-700 max-w-sm mx-auto">
+                  Tus desafíos completados han sido procesados y eliminados de la lista activa por hoy. ¡Disfruta tus recompensas de XP y Monedas!
+                </p>
+              </div>
+            ) : (
+              activeDailyChallenges.map((c) => (
+                <div
+                  key={c.id}
+                  className="p-4 rounded-2xl border bg-white border-slate-200/80 hover:border-indigo-300 shadow-2xs transition-all flex items-start justify-between gap-4"
+                >
+                  <div className="flex items-start gap-3 flex-1">
+                    <button
+                      onClick={() => onToggleChallenge(c.id)}
+                      className="mt-0.5 text-slate-400 hover:text-emerald-600 transition-colors cursor-pointer"
+                      title="Marcar como completado"
+                    >
+                      <Circle className="w-5 h-5" />
+                    </button>
+
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-2">
+                        <span className={`text-[10px] font-extrabold px-2 py-0.5 rounded-full uppercase tracking-wider ${
+                          c.category === 'educacion' ? 'bg-indigo-100 text-indigo-800' :
+                          c.category === 'salud' ? 'bg-emerald-100 text-emerald-800' :
+                          c.category === 'bienestar' ? 'bg-blue-100 text-blue-800' : 'bg-amber-100 text-amber-800'
+                        }`}>
+                          {c.category}
+                        </span>
+                        <span className="text-[11px] font-bold text-indigo-600">+{c.xpReward} XP</span>
+                        <span className="text-[11px] font-bold text-amber-600">+{c.coinReward} 🪙</span>
+                      </div>
+
+                      <h4 className="text-sm font-bold text-slate-900">
+                        {c.title}
+                      </h4>
+                      <p className="text-xs text-slate-600">{c.description}</p>
+                    </div>
+                  </div>
+
                   <button
                     onClick={() => onToggleChallenge(c.id)}
-                    className="mt-0.5 text-slate-400 hover:text-emerald-600 transition-colors cursor-pointer"
+                    className="px-3.5 py-1.5 rounded-xl text-xs font-bold shrink-0 cursor-pointer transition-colors bg-indigo-600 text-white hover:bg-indigo-700 shadow-xs flex items-center gap-1"
                   >
-                    {c.completed ? (
-                      <CheckCircle2 className="w-5 h-5 text-emerald-600 fill-emerald-100" />
-                    ) : (
-                      <Circle className="w-5 h-5" />
-                    )}
+                    <span>Completar</span>
                   </button>
-
-                  <div className="space-y-1">
-                    <div className="flex items-center gap-2">
-                      <span className={`text-[10px] font-extrabold px-2 py-0.5 rounded-full uppercase tracking-wider ${
-                        c.category === 'educacion' ? 'bg-indigo-100 text-indigo-800' :
-                        c.category === 'salud' ? 'bg-emerald-100 text-emerald-800' :
-                        c.category === 'bienestar' ? 'bg-blue-100 text-blue-800' : 'bg-amber-100 text-amber-800'
-                      }`}>
-                        {c.category}
-                      </span>
-                      <span className="text-[11px] font-bold text-indigo-600">+{c.xpReward} XP</span>
-                      <span className="text-[11px] font-bold text-amber-600">+{c.coinReward} 🪙</span>
-                    </div>
-
-                    <h4 className={`text-sm font-bold ${c.completed ? 'line-through text-slate-500' : 'text-slate-900'}`}>
-                      {c.title}
-                    </h4>
-                    <p className="text-xs text-slate-600">{c.description}</p>
-
-                    {c.evidenceNote && (
-                      <div className="mt-2 text-[11px] bg-white/90 border border-emerald-200/80 p-2 rounded-xl text-emerald-800 italic">
-                        "{c.evidenceNote}"
-                      </div>
-                    )}
-                  </div>
                 </div>
-
-                <button
-                  onClick={() => onToggleChallenge(c.id)}
-                  className={`px-3.5 py-1.5 rounded-xl text-xs font-bold shrink-0 cursor-pointer transition-colors ${
-                    c.completed
-                      ? 'bg-emerald-100 text-emerald-800 hover:bg-emerald-200'
-                      : 'bg-indigo-600 text-white hover:bg-indigo-700 shadow-xs'
-                  }`}
-                >
-                  {c.completed ? 'Listo' : 'Completar'}
-                </button>
-              </div>
-            ))}
+              ))
+            )}
           </div>
 
           <div className="pt-2 text-center">

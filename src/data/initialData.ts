@@ -1,18 +1,20 @@
 import { Challenge, Badge, UserProfile, CalendarEvent, NoteItem, HighScore, CommunityPost } from '../types';
 
+export const DEFAULT_AVATAR_URL = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 500 500'><rect width='500' height='500' fill='%23ffffff'/><ellipse cx='250' cy='205' rx='98' ry='105' fill='%23678DF8'/><path d='M 80 500 C 80 345, 150 345, 250 345 C 350 345, 420 345, 420 500 Z' fill='%23678DF8'/></svg>";
+
 export const AVATAR_PRESETS = [
-  { id: 'av1', label: 'Gamer Student', url: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=250&q=80' },
+  { id: 'av_default', label: 'Silueta Neutra (Azul Predeterminada)', url: DEFAULT_AVATAR_URL },
+  { id: 'av1', label: 'Estudiante Tech', url: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=250&q=80' },
   { id: 'av2', label: 'Cyber Ninja', url: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?auto=format&fit=crop&w=250&q=80' },
-  { id: 'av3', label: 'Skate & Chill', url: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=250&q=80' },
-  { id: 'av4', label: 'Creative Artist', url: 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&w=250&q=80' },
+  { id: 'av3', label: 'Skate & Chill', url: 'https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?auto=format&fit=crop&w=250&q=80' },
+  { id: 'av4', label: 'Creative Artist', url: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?auto=format&fit=crop&w=250&q=80' },
   { id: 'av5', label: 'Tech Coder', url: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=250&q=80' },
-  { id: 'av6', label: 'Astronaut Scholar', url: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=250&q=80' },
 ];
 
 export const INITIAL_USER_PROFILE: UserProfile = {
   name: 'Alex Rivera',
   username: '@alex_estudiante',
-  avatarUrl: AVATAR_PRESETS[0].url,
+  avatarUrl: DEFAULT_AVATAR_URL,
   level: 5,
   xp: 1850,
   xpToNextLevel: 2500,
@@ -41,7 +43,7 @@ export const INITIAL_USER_PROFILE: UserProfile = {
 };
 
 export const INITIAL_CHALLENGES: Challenge[] = [
-  // Educación & Estudio (Ideal para jóvenes de 12 a 17)
+  // Educación & Estudio (Ideal para jóvenes)
   {
     id: 'c1',
     title: '🍅 Sesión de Enfoque Pomodoro (25 min sin Redes)',
@@ -50,9 +52,7 @@ export const INITIAL_CHALLENGES: Challenge[] = [
     frequency: 'daily',
     xpReward: 120,
     coinReward: 35,
-    completed: true,
-    completedAt: 'Hoy 04:30 PM',
-    evidenceNote: 'Completé mi sesión de repaso de Matemáticas escuchando Lofi Beats.',
+    completed: false,
     iconName: 'Sparkles',
   },
   {
@@ -63,9 +63,7 @@ export const INITIAL_CHALLENGES: Challenge[] = [
     frequency: 'daily',
     xpReward: 150,
     coinReward: 40,
-    completed: true,
-    completedAt: 'Hoy 05:15 PM',
-    evidenceNote: 'Resumí el Capítulo 3 de Biología y la guía de Física.',
+    completed: false,
     iconName: 'BookOpen',
   },
   {
@@ -89,9 +87,7 @@ export const INITIAL_CHALLENGES: Challenge[] = [
     frequency: 'daily',
     xpReward: 130,
     coinReward: 30,
-    completed: true,
-    completedAt: 'Hoy 06:00 PM',
-    evidenceNote: 'Partidito de básquetbol con amigos en la cancha.',
+    completed: false,
     iconName: 'Activity',
   },
   {
@@ -150,9 +146,7 @@ export const INITIAL_CHALLENGES: Challenge[] = [
     frequency: 'daily',
     xpReward: 110,
     coinReward: 35,
-    completed: true,
-    completedAt: 'Ayer 08:00 PM',
-    evidenceNote: 'Conseguí 1450 pts en el Nivel 3.',
+    completed: false,
     iconName: 'Gamepad2',
   },
   {
@@ -304,7 +298,7 @@ export const INITIAL_COMMUNITY_POSTS: CommunityPost[] = [
       {
         id: 'c3',
         username: 'Alex Rivera (Tú)',
-        avatarUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=250&q=80',
+        avatarUrl: DEFAULT_AVATAR_URL,
         text: '¡Buena jugada Lucas! Te reto a superarlo en la Trivia Estudiantil también 🧠',
         timestamp: 'Hace 30 min',
         likes: 5,

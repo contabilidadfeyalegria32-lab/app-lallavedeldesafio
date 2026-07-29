@@ -42,6 +42,7 @@ export interface UserProfile {
   title: string;
   unlockedTitles: string[];
   badges: Badge[];
+  claimedMilestones?: number[];
 }
 
 export interface CalendarEvent {

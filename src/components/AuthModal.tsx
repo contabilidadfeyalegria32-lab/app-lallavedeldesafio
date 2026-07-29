@@ -24,7 +24,9 @@ export const AuthModal: React.FC<AuthModalProps> = ({
   onLoginSuccess,
   savedAccounts,
 }) => {
-  const [mode, setMode] = useState<'login' | 'register'>('register');
+  const [mode, setMode] = useState<'login' | 'register'>(
+    savedAccounts.length > 0 ? 'login' : 'register'
+  );
   
   // Login State
   const [loginUsername, setLoginUsername] = useState('');
@@ -190,6 +192,11 @@ export const AuthModal: React.FC<AuthModalProps> = ({
           {/* Logo Badge */}
           <div className="w-14 h-14 mx-auto rounded-2xl bg-gradient-to-tr from-amber-400 to-emerald-400 text-slate-950 flex items-center justify-center shadow-lg mb-3">
             <Key className="w-8 h-8 text-slate-950 transform -rotate-45" />
+          </div>
+
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-400/20 text-amber-300 border border-amber-400/30 text-[11px] font-black tracking-wider mb-2">
+            <Lock className="w-3.5 h-3.5 text-amber-300" />
+            <span>Acceso Obligatorio — Inicia Sesión o Regístrate</span>
           </div>
 
           <h2 className="text-2xl font-black tracking-tight text-white">

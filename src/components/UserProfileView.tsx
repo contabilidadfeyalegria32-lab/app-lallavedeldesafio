@@ -1,13 +1,15 @@
 import React, { useState, useRef } from 'react';
 import { UserProfile, Badge } from '../types';
-import { AVATAR_PRESETS } from '../data/initialData';
+import { AVATAR_PRESETS, DEFAULT_AVATAR_URL } from '../data/initialData';
 import { User, Award, Flame, Coins, Trophy, Clock, Sparkles, CheckCircle2, Shield, Palette, Star, Crown, Pencil, Camera, Upload, Image as ImageIcon, Check, X, UserCheck } from 'lucide-react';
+import { MilestonesSection } from './MilestonesSection';
 
 interface UserProfileViewProps {
   user: UserProfile;
   onUpdateProfile: (updatedProfile: Partial<UserProfile>) => void;
   onUpdateTitle: (title: string) => void;
   onSelectTheme: (theme: UserProfile['selectedTheme']) => void;
+  onClaimMilestone?: (milestoneXp: number) => void;
 }
 
 export const UserProfileView: React.FC<UserProfileViewProps> = ({
@@ -15,6 +17,7 @@ export const UserProfileView: React.FC<UserProfileViewProps> = ({
   onUpdateProfile,
   onUpdateTitle,
   onSelectTheme,
+  onClaimMilestone,
 }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [editName, setEditName] = useState(user.name);
@@ -268,6 +271,17 @@ export const UserProfileView: React.FC<UserProfileViewProps> = ({
                         <span>Subir Foto desde tu Equipo</span>
                       </button>
 
+                      {/* Reset to Neutral Avatar */}
+                      <button
+                        type="button"
+                        onClick={() => setEditAvatarUrl(DEFAULT_AVATAR_URL)}
+                        className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition-all cursor-pointer"
+                        title="Restablecer a la silueta azul predeterminada"
+                      >
+                        <User className="w-3.5 h-3.5 text-indigo-600" />
+                        <span>Silueta Neutra</span>
+                      </button>
+
                       <span className="text-[11px] text-slate-400">o pega un enlace web abajo:</span>
                     </div>
 
@@ -376,6 +390,14 @@ export const UserProfileView: React.FC<UserProfileViewProps> = ({
         </div>
 
       </div>
+
+      {/* 1,000 XP Milestones & Chests */}
+      {onClaimMilestone && (
+        <MilestonesSection
+          user={user}
+          onClaimMilestone={onClaimMilestone}
+        />
+      )}
 
       {/* Badges Gallery Section */}
       <div className="bg-white rounded-2xl border border-slate-200/90 shadow-sm p-6 sm:p-8 space-y-6">

@@ -16,6 +16,7 @@ export const ChallengeSection: React.FC<ChallengeSectionProps> = ({
   onAddChallenge,
   onShareToCommunity,
 }) => {
+  const [statusTab, setStatusTab] = useState<'pending' | 'completed'>('pending');
   const [selectedCategory, setSelectedCategory] = useState<ChallengeCategory | 'all'>('all');
   const [selectedFrequency, setSelectedFrequency] = useState<ChallengeFrequency>('daily');
   const [activeEvidenceModal, setActiveEvidenceModal] = useState<Challenge | null>(null);
@@ -28,11 +29,17 @@ export const ChallengeSection: React.FC<ChallengeSectionProps> = ({
   const [newCategory, setNewCategory] = useState<ChallengeCategory>('bienestar');
   const [newFrequency, setNewFrequency] = useState<ChallengeFrequency>('daily');
 
-  const filtered = challenges.filter((c) => {
+  // Filter logic: Filter category, frequency, and completed state. Capped at max 6 for daily active.
+  const rawFiltered = challenges.filter((c) => {
     const categoryMatch = selectedCategory === 'all' || c.category === selectedCategory;
     const frequencyMatch = c.frequency === selectedFrequency;
-    return categoryMatch && frequencyMatch;
+    const statusMatch = statusTab === 'pending' ? !c.completed : c.completed;
+    return categoryMatch && frequencyMatch && statusMatch;
   });
+
+  const filtered = (selectedFrequency === 'daily' && statusTab === 'pending')
+    ? rawFiltered.slice(0, 6)
+    : rawFiltered;
 
   const handleOpenEvidence = (challenge: Challenge) => {
     if (challenge.completed) {
@@ -110,26 +117,50 @@ export const ChallengeSection: React.FC<ChallengeSectionProps> = ({
         </button>
       </div>
 
-      {/* Frequency Tabs (Diarios, Semanales, Mensuales) */}
-      <div className="flex items-center justify-between gap-2 overflow-x-auto pb-1 no-scrollbar border-b border-slate-200">
-        <div className="flex items-center gap-2">
+      {/* Frequency & Status Controls Bar */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 pb-2 border-b border-slate-200">
+        <div className="flex items-center gap-2 overflow-x-auto pb-1 no-scrollbar">
           {(['daily', 'weekly', 'monthly'] as ChallengeFrequency[]).map((freq) => (
             <button
               key={freq}
               onClick={() => setSelectedFrequency(freq)}
-              className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+              className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer shrink-0 ${
                 selectedFrequency === freq
                   ? 'bg-slate-900 text-white shadow-xs'
                   : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
               }`}
             >
-              {freq === 'daily' ? '📅 Desafíos Diarios' : freq === 'weekly' ? '🗓️ Desafíos Semanales' : '🏆 Desafíos Mensuales'}
+              {freq === 'daily' ? '📅 Diarios (Máx. 6)' : freq === 'weekly' ? '🗓️ Semanales' : '🏆 Mensuales'}
             </button>
           ))}
+
+          {/* Pending vs Completed Switcher */}
+          <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-xl shrink-0">
+            <button
+              onClick={() => setStatusTab('pending')}
+              className={`px-3 py-1 text-xs font-extrabold rounded-lg transition-all cursor-pointer ${
+                statusTab === 'pending'
+                  ? 'bg-indigo-600 text-white shadow-xs'
+                  : 'text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              ⚡ Activos / Pendientes
+            </button>
+            <button
+              onClick={() => setStatusTab('completed')}
+              className={`px-3 py-1 text-xs font-extrabold rounded-lg transition-all cursor-pointer ${
+                statusTab === 'completed'
+                  ? 'bg-emerald-600 text-white shadow-xs'
+                  : 'text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              ✅ Completados
+            </button>
+          </div>
         </div>
 
         {/* Category Filters */}
-        <div className="flex items-center gap-1.5 bg-slate-100 p-1 rounded-xl">
+        <div className="flex items-center gap-1.5 bg-slate-100 p-1 rounded-xl overflow-x-auto">
           {[
             { id: 'all', label: 'Todos', icon: '✨' },
             { id: 'bienestar', label: 'Bienestar', icon: '🌱' },
@@ -140,7 +171,7 @@ export const ChallengeSection: React.FC<ChallengeSectionProps> = ({
             <button
               key={cat.id}
               onClick={() => setSelectedCategory(cat.id as any)}
-              className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-semibold transition-colors cursor-pointer ${
+              className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-semibold transition-colors cursor-pointer shrink-0 ${
                 selectedCategory === cat.id
                   ? 'bg-white text-indigo-700 shadow-2xs font-bold'
                   : 'text-slate-600 hover:text-slate-900'
@@ -153,9 +184,37 @@ export const ChallengeSection: React.FC<ChallengeSectionProps> = ({
         </div>
       </div>
 
-      {/* Challenges Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {filtered.map((c) => (
+      {/* Info Notice Banner */}
+      {selectedFrequency === 'daily' && statusTab === 'pending' && (
+        <div className="flex items-center justify-between text-xs text-indigo-900 bg-indigo-50 border border-indigo-200/80 px-4 py-2.5 rounded-2xl">
+          <span className="font-semibold flex items-center gap-1.5">
+            <Sparkles className="w-4 h-4 text-amber-500 fill-amber-400" />
+            <span>Sistema de Misiones Diarias: Asignación máxima de 6 desafíos por día.</span>
+          </span>
+          <span className="hidden sm:inline font-bold text-indigo-700 text-[11px] bg-white px-2.5 py-0.5 rounded-lg border border-indigo-200">
+            Al completar un desafío, se elimina de tu lista activa
+          </span>
+        </div>
+      )}
+
+      {/* Challenges Grid or Empty State */}
+      {filtered.length === 0 ? (
+        <div className="text-center py-12 bg-white rounded-2xl border-2 border-dashed border-slate-200 p-8 space-y-3">
+          <div className="w-12 h-12 mx-auto rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold text-xl">
+            {statusTab === 'pending' ? '✨' : '🏆'}
+          </div>
+          <h3 className="text-base font-extrabold text-slate-900">
+            {statusTab === 'pending' ? '¡No tienes desafíos pendientes!' : 'Aún no hay desafíos completados en esta categoría.'}
+          </h3>
+          <p className="text-xs text-slate-500 max-w-md mx-auto">
+            {statusTab === 'pending'
+              ? 'Has completado todos tus desafíos activos disponibles. ¡Excelente trabajo! Todos los desafíos completados se eliminan de tu lista pendiente.'
+              : 'Completa desafíos desde la pestaña de pendientes para ir sumando tu historial.'}
+          </p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {filtered.map((c) => (
           <div
             key={c.id}
             className={`rounded-2xl border p-5 flex flex-col justify-between transition-all shadow-xs hover:shadow-md ${
@@ -222,6 +281,7 @@ export const ChallengeSection: React.FC<ChallengeSectionProps> = ({
           </div>
         ))}
       </div>
+      )}
 
       {/* Completion & Evidence Modal */}
       {activeEvidenceModal && (

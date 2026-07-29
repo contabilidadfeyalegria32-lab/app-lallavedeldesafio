@@ -10,6 +10,8 @@ import { CommunityFeed } from './components/CommunityFeed';
 import { QrModal } from './components/QrModal';
 import { FocusTimerModal } from './components/FocusTimerModal';
 import { AuthModal, AuthAccount } from './components/AuthModal';
+import { MilestoneRewardModal, MilestoneRewardData } from './components/MilestoneRewardModal';
+import { getMilestoneReward, getUnclaimedMilestones } from './utils/milestones';
 
 import {
   INITIAL_USER_PROFILE,
@@ -18,6 +20,7 @@ import {
   INITIAL_NOTES,
   INITIAL_HIGH_SCORES,
   INITIAL_COMMUNITY_POSTS,
+  DEFAULT_AVATAR_URL,
 } from './data/initialData';
 
 import { Challenge, CalendarEvent, NoteItem, HighScore, CommunityPost, UserProfile } from './types';
@@ -54,7 +57,11 @@ export default function App() {
       const saved = localStorage.getItem('app_user_profile');
       if (saved) {
         try {
-          return { ...INITIAL_USER_PROFILE, ...JSON.parse(saved) };
+          const parsed = JSON.parse(saved);
+          if (parsed.avatarUrl && (parsed.avatarUrl.includes('photo-1534528741775') || parsed.avatarUrl.includes('photo-1494790108377'))) {
+            parsed.avatarUrl = DEFAULT_AVATAR_URL;
+          }
+          return { ...INITIAL_USER_PROFILE, ...parsed };
         } catch (e) {
           console.error('Error loading user profile:', e);
         }
@@ -106,6 +113,65 @@ export default function App() {
   };
 
   const currentAppUrl = typeof window !== 'undefined' ? window.location.origin : 'https://llave-desafio.app';
+
+  // 1,000 XP Milestone Modal state & handlers
+  const [activeMilestoneModal, setActiveMilestoneModal] = useState<MilestoneRewardData | null>(null);
+
+  useEffect(() => {
+    if (!isAuthenticated) return;
+    const unclaimed = getUnclaimedMilestones(user.xp, user.claimedMilestones || []);
+    if (unclaimed.length > 0 && !activeMilestoneModal) {
+      setActiveMilestoneModal(getMilestoneReward(unclaimed[0]));
+    }
+  }, [user.xp, user.claimedMilestones, isAuthenticated, activeMilestoneModal]);
+
+  const handleOpenClaimMilestoneModal = (milestoneXp: number) => {
+    setActiveMilestoneModal(getMilestoneReward(milestoneXp));
+  };
+
+  const handleClaimMilestone = () => {
+    if (!activeMilestoneModal) return;
+    const mXp = activeMilestoneModal.milestoneXp;
+
+    setUser((u) => {
+      const currentClaimed = u.claimedMilestones || [];
+      if (currentClaimed.includes(mXp)) return u;
+
+      const updatedClaimed = [...currentClaimed, mXp];
+      const newCoins = u.coins + activeMilestoneModal.coinsBonus;
+
+      const newUnlockedTitles = u.unlockedTitles.includes(activeMilestoneModal.titleUnlocked)
+        ? u.unlockedTitles
+        : [...u.unlockedTitles, activeMilestoneModal.titleUnlocked];
+
+      const badgeExists = u.badges.some((b) => b.name === activeMilestoneModal.badgeName);
+      const updatedBadges = badgeExists
+        ? u.badges
+        : [
+            ...u.badges,
+            {
+              id: `badge_m_${mXp}`,
+              name: activeMilestoneModal.badgeName,
+              description: `Desbloqueada por superar la gran meta de ${mXp} XP en La Llave del Desafío.`,
+              category: 'general' as const,
+              icon: activeMilestoneModal.badgeIcon,
+              unlocked: true,
+              unlockedAt: new Date().toISOString().split('T')[0],
+              xpBonus: 250,
+            },
+          ];
+
+      return {
+        ...u,
+        coins: newCoins,
+        unlockedTitles: newUnlockedTitles,
+        badges: updatedBadges,
+        claimedMilestones: updatedClaimed,
+      };
+    });
+
+    setActiveMilestoneModal(null);
+  };
 
 
   // Toggle or complete a challenge
@@ -346,17 +412,21 @@ export default function App() {
     handleEarnGameRewards(25, 10);
   };
 
-  return (
-    <div className="min-h-screen bg-slate-50 text-slate-800 flex flex-col font-sans selection:bg-indigo-500 selection:text-white">
-      
-      {/* Auth Modal Overlay if not logged in */}
-      {!isAuthenticated && (
+  // Mandatory Authentication Gate: Lock entire platform if not authenticated
+  if (!isAuthenticated) {
+    return (
+      <div className="min-h-screen bg-slate-950 flex items-center justify-center font-sans selection:bg-indigo-500 selection:text-white">
         <AuthModal
           savedAccounts={savedAccounts}
           onLoginSuccess={handleLoginSuccess}
         />
-      )}
+      </div>
+    );
+  }
 
+  return (
+    <div className="min-h-screen bg-slate-50 text-slate-800 flex flex-col font-sans selection:bg-indigo-500 selection:text-white">
+      
       {/* Navigation Header */}
       <Header
         activeTab={activeTab}
@@ -378,6 +448,7 @@ export default function App() {
             onToggleChallenge={handleToggleChallenge}
             onNavigate={setActiveTab}
             onOpenFocusTimer={() => setIsFocusTimerOpen(true)}
+            onClaimMilestone={handleOpenClaimMilestoneModal}
           />
         )}
 
@@ -422,6 +493,7 @@ export default function App() {
             onUpdateProfile={(updated) => setUser((u) => ({ ...u, ...updated }))}
             onUpdateTitle={(title) => setUser((u) => ({ ...u, title }))}
             onSelectTheme={(selectedTheme) => setUser((u) => ({ ...u, selectedTheme }))}
+            onClaimMilestone={handleOpenClaimMilestoneModal}
           />
         )}
 
@@ -462,6 +534,14 @@ export default function App() {
         onClose={() => setIsFocusTimerOpen(false)}
         onEarnRewards={handleEarnGameRewards}
       />
+
+      {/* 1,000 XP Milestone Reward Modal */}
+      {activeMilestoneModal && (
+        <MilestoneRewardModal
+          rewardData={activeMilestoneModal}
+          onClaim={handleClaimMilestone}
+        />
+      )}
 
     </div>
   );

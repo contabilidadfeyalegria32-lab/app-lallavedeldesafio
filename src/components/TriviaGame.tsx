@@ -1,103 +1,88 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Brain, Trophy, Sparkles, CheckCircle2, XCircle, ArrowRight, RotateCcw,
-  Zap, HelpCircle, Flame, Plus, Layers, Lightbulb, Share2, Award, ShieldCheck
+  Zap, HelpCircle, Flame, Plus, Layers, Lightbulb, Share2, Award, ShieldCheck, RefreshCw
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { playAudioEffect } from '../utils/audio';
+import { INITIAL_TRIVIA_QUESTIONS, Question } from '../data/triviaQuestions';
 
 interface TriviaGameProps {
   onEarnRewards: (xp: number, coins: number) => void;
 }
 
-interface Question {
-  id: number;
-  question: string;
-  category: 'Escuela' | 'Ciencia' | 'Gaming & Tech' | 'Cultura' | 'Lógica';
-  options: string[];
-  correctAnswer: number; // 0-indexed
-  explanation: string;
-  hint?: string;
-  author?: string;
-}
+const QUESTIONS_PER_ROUND = 5;
 
-const DEFAULT_TRIVIA_QUESTIONS: Question[] = [
-  {
-    id: 1,
-    question: '¿Cuál es el planeta más grande de nuestro sistema solar?',
-    category: 'Ciencia',
-    options: ['Marte', 'Júpiter', 'Saturno', 'Neptuno'],
-    correctAnswer: 1,
-    explanation: 'Júpiter es un gigante gaseoso y el planeta de mayor tamaño en el sistema solar.',
-    hint: 'Es un gigante gaseoso famoso por su Gran Mancha Roja.',
-  },
-  {
-    id: 2,
-    question: '¿Qué lenguaje de programación se utiliza ampliamente para crear páginas web interactivas?',
-    category: 'Gaming & Tech',
-    options: ['Python', 'C++', 'JavaScript', 'SQL'],
-    correctAnswer: 2,
-    explanation: 'JavaScript es el lenguaje estándar de la web ejecutado en todos los navegadores modernos.',
-    hint: 'Forma la trinidad de la web junto con HTML y CSS.',
-  },
-  {
-    id: 3,
-    question: '¿Cuál es la fórmula química del agua?',
-    category: 'Escuela',
-    options: ['CO2', 'H2O', 'NaCl', 'O2'],
-    correctAnswer: 1,
-    explanation: 'El agua está compuesta por dos átomos de Hidrógeno y uno de Oxígeno (H2O).',
-    hint: 'Tiene 2 átomos de hidrógeno y 1 de oxígeno.',
-  },
-  {
-    id: 4,
-    question: '¿Qué organelo celular es conocido como la "central de energía" de la célula?',
-    category: 'Escuela',
-    options: ['Núcleo', 'Ribosoma', 'Mitocondria', 'Aparato de Golgi'],
-    correctAnswer: 2,
-    explanation: 'La mitocondria produce ATP, la principal molécula de energía celular.',
-    hint: 'Sintetiza la molécula ATP para darle energía a la célula.',
-  },
-  {
-    id: 5,
-    question: '¿Cuál es el valor aproximado del número Pi (π)?',
-    category: 'Lógica',
-    options: ['2.71', '3.1416', '1.618', '9.81'],
-    correctAnswer: 1,
-    explanation: 'Pi (π) representa la relación entre la circunferencia de un círculo y su diámetro (~3.14159).',
-    hint: 'Se celebra mundialmente el 14 de marzo (3/14).',
-  },
-  {
-    id: 6,
-    question: 'En el desarrollo de software, ¿qué significa "HTML"?',
-    category: 'Gaming & Tech',
-    options: ['HyperText Markup Language', 'High Tech Machine Language', 'Home Tool Markup Level', 'Hyper Transfer Machine Link'],
-    correctAnswer: 0,
-    explanation: 'HTML significa HyperText Markup Language y define la estructura de las páginas web.',
-    hint: 'Comienza con "HyperText".',
-  },
-  {
-    id: 7,
-    question: '¿En qué año llegó el ser humano por primera vez a la Luna en la misión Apolo 11?',
-    category: 'Cultura',
-    options: ['1955', '1969', '1975', '1982'],
-    correctAnswer: 1,
-    explanation: 'Neil Armstrong pisó la Luna el 20 de julio de 1969 pronunciando su famosa frase.',
-    hint: 'Fue a finales de la década de los 60s.',
-  },
-  {
-    id: 8,
-    question: '¿Cuál es la velocidad aproximada de la luz en el vacío?',
-    category: 'Ciencia',
-    options: ['300,000 km/s', '150,000 km/s', '1,000,000 km/s', '30,000 km/s'],
-    correctAnswer: 0,
-    explanation: 'La luz viaja a aproximadamente 300,000 kilómetros por segundo (c ≈ 3x10^8 m/s).',
-    hint: 'Recorre la distancia Tierra-Luna en aproximadamente 1.3 segundos.',
+// Load stored custom questions
+const getCustomQuestions = (): Question[] => {
+  try {
+    const saved = localStorage.getItem('app_custom_trivia_questions');
+    return saved ? JSON.parse(saved) : [];
+  } catch {
+    return [];
   }
-];
+};
+
+const saveCustomQuestions = (questions: Question[]) => {
+  try {
+    localStorage.setItem('app_custom_trivia_questions', JSON.stringify(questions));
+  } catch (e) {
+    console.error(e);
+  }
+};
+
+// Load used question IDs from localStorage
+const getUsedQuestionIds = (): number[] => {
+  try {
+    const saved = localStorage.getItem('app_used_trivia_ids');
+    return saved ? JSON.parse(saved) : [];
+  } catch {
+    return [];
+  }
+};
+
+const saveUsedQuestionIds = (ids: number[]) => {
+  try {
+    localStorage.setItem('app_used_trivia_ids', JSON.stringify(ids));
+  } catch (e) {
+    console.error(e);
+  }
+};
+
+// Select fresh, unasked questions
+const pickFreshQuestions = (customQs: Question[]): { selected: Question[]; newlyUsedIds: number[] } => {
+  const allPool = [...INITIAL_TRIVIA_QUESTIONS, ...customQs];
+  let usedIds = getUsedQuestionIds();
+
+  // Filter out questions that have already been asked
+  let unasked = allPool.filter((q) => !usedIds.includes(q.id));
+
+  // If we don't have enough unasked questions to complete a round, reset history
+  if (unasked.length < QUESTIONS_PER_ROUND) {
+    usedIds = [];
+    unasked = [...allPool];
+  }
+
+  // Shuffle unasked questions randomly
+  const shuffled = [...unasked].sort(() => 0.5 - Math.random());
+  const selected = shuffled.slice(0, QUESTIONS_PER_ROUND);
+
+  // Update used IDs
+  const newlyUsedIds = Array.from(new Set([...usedIds, ...selected.map((s) => s.id)]));
+  saveUsedQuestionIds(newlyUsedIds);
+
+  return { selected, newlyUsedIds };
+};
 
 export const TriviaGame: React.FC<TriviaGameProps> = ({ onEarnRewards }) => {
-  const [questions, setQuestions] = useState<Question[]>(DEFAULT_TRIVIA_QUESTIONS);
+  const [customQuestions, setCustomQuestions] = useState<Question[]>(getCustomQuestions);
+  
+  // Game questions for current session
+  const [questions, setQuestions] = useState<Question[]>(() => {
+    const { selected } = pickFreshQuestions(getCustomQuestions());
+    return selected;
+  });
+
   const [currentIdx, setCurrentIdx] = useState(0);
   const [selectedOption, setSelectedOption] = useState<number | null>(null);
   const [isAnswered, setIsAnswered] = useState(false);
@@ -106,6 +91,7 @@ export const TriviaGame: React.FC<TriviaGameProps> = ({ onEarnRewards }) => {
   const [maxStreak, setMaxStreak] = useState(0);
   const [correctAnswersCount, setCorrectAnswersCount] = useState(0);
   const [gameFinished, setGameFinished] = useState(false);
+  const [roundNotification, setRoundNotification] = useState<string | null>('¡Nuevas preguntas cargadas! 🧠');
 
   // Wildcards state
   const [fiftyFiftyUsed, setFiftyFiftyUsed] = useState(false);
@@ -116,7 +102,7 @@ export const TriviaGame: React.FC<TriviaGameProps> = ({ onEarnRewards }) => {
   // Add question modal
   const [showAddModal, setShowAddModal] = useState(false);
   const [newQText, setNewQText] = useState('');
-  const [newQCategory, setNewQCategory] = useState<'Escuela' | 'Ciencia' | 'Gaming & Tech' | 'Cultura' | 'Lógica'>('Escuela');
+  const [newQCategory, setNewQCategory] = useState<Question['category']>('Escuela');
   const [newQOpt0, setNewQOpt0] = useState('');
   const [newQOpt1, setNewQOpt1] = useState('');
   const [newQOpt2, setNewQOpt2] = useState('');
@@ -124,7 +110,15 @@ export const TriviaGame: React.FC<TriviaGameProps> = ({ onEarnRewards }) => {
   const [newQCorrect, setNewQCorrect] = useState(0);
   const [newQExplanation, setNewQExplanation] = useState('');
 
-  const q = questions[currentIdx];
+  // Auto-clear notification banner after 3 seconds
+  useEffect(() => {
+    if (roundNotification) {
+      const timer = setTimeout(() => setRoundNotification(null), 3500);
+      return () => clearTimeout(timer);
+    }
+  }, [roundNotification]);
+
+  const q = questions[currentIdx] || INITIAL_TRIVIA_QUESTIONS[0];
 
   const handleSelectOption = (idx: number) => {
     if (isAnswered || disabledOptions.includes(idx)) return;
@@ -165,7 +159,6 @@ export const TriviaGame: React.FC<TriviaGameProps> = ({ onEarnRewards }) => {
 
     // Pick 2 incorrect options to disable
     const wrongIndices = [0, 1, 2, 3].filter((i) => i !== q.correctAnswer);
-    // Shuffle wrong indices and take first 2
     const toDisable = wrongIndices.sort(() => 0.5 - Math.random()).slice(0, 2);
     setDisabledOptions(toDisable);
   };
@@ -201,7 +194,10 @@ export const TriviaGame: React.FC<TriviaGameProps> = ({ onEarnRewards }) => {
     }
   };
 
+  // Restart game with BRAND NEW unasked questions!
   const handleRestart = () => {
+    const { selected } = pickFreshQuestions(customQuestions);
+    setQuestions(selected);
     setCurrentIdx(0);
     setSelectedOption(null);
     setIsAnswered(false);
@@ -214,6 +210,7 @@ export const TriviaGame: React.FC<TriviaGameProps> = ({ onEarnRewards }) => {
     setDisabledOptions([]);
     setHintUsed(false);
     setShowHintText(false);
+    setRoundNotification('✨ ¡Se han cargado 5 preguntas totalmente nuevas!');
     playAudioEffect('click');
   };
 
@@ -231,7 +228,10 @@ export const TriviaGame: React.FC<TriviaGameProps> = ({ onEarnRewards }) => {
       author: 'Tú',
     };
 
-    setQuestions((prev) => [...prev, createdQ]);
+    const updatedCustoms = [...customQuestions, createdQ];
+    setCustomQuestions(updatedCustoms);
+    saveCustomQuestions(updatedCustoms);
+
     playAudioEffect('win');
     confetti({
       particleCount: 60,
@@ -246,7 +246,12 @@ export const TriviaGame: React.FC<TriviaGameProps> = ({ onEarnRewards }) => {
     setNewQOpt2('');
     setNewQOpt3('');
     setNewQExplanation('');
+
+    setRoundNotification('¡Tu pregunta ha sido guardada en el banco de trivia! 🎉');
   };
+
+  const totalBankSize = INITIAL_TRIVIA_QUESTIONS.length + customQuestions.length;
+  const usedCount = getUsedQuestionIds().length;
 
   return (
     <div className="bg-slate-900 text-white rounded-3xl p-6 sm:p-8 border border-indigo-500/30 shadow-2xl space-y-6 relative overflow-hidden">
@@ -257,15 +262,22 @@ export const TriviaGame: React.FC<TriviaGameProps> = ({ onEarnRewards }) => {
       {/* Header Bar */}
       <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-800 pb-4">
         <div className="space-y-1">
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-400/30 text-xs font-bold">
-            <Brain className="w-3.5 h-3.5 text-amber-300" />
-            <span>Trivia Estudiantil & Ciencia 🧠</span>
+          <div className="flex flex-wrap items-center gap-2">
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-400/30 text-xs font-bold">
+              <Brain className="w-3.5 h-3.5 text-amber-300" />
+              <span>Trivia Estudiantil & Ciencia 🧠</span>
+            </div>
+
+            <span className="text-[11px] font-mono px-2.5 py-0.5 rounded-full bg-slate-800 text-slate-300 border border-slate-700">
+              Banco: {totalBankSize} preg.
+            </span>
           </div>
+
           <h3 className="text-xl sm:text-2xl font-black tracking-tight text-white">
             Demuestra tus Conocimientos
           </h3>
           <p className="text-xs text-slate-400">
-            Responde correctamente, activa comodines y acumula rachas de combo.
+            Preguntas dinámicas sin repetición. ¡Cada partida ofrece nuevos desafíos!
           </p>
         </div>
 
@@ -288,20 +300,34 @@ export const TriviaGame: React.FC<TriviaGameProps> = ({ onEarnRewards }) => {
           {/* Add Question Button */}
           <button
             onClick={() => setShowAddModal(true)}
-            className="p-2.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-2xl text-xs font-extrabold shadow-md transition-transform hover:scale-105 cursor-pointer"
+            className="p-2.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-2xl text-xs font-extrabold shadow-md transition-transform hover:scale-105 cursor-pointer flex items-center gap-1.5"
             title="Crear tu propia pregunta"
           >
             <Plus className="w-4 h-4" />
+            <span className="hidden sm:inline">Agregar</span>
           </button>
         </div>
       </div>
+
+      {/* Fresh Round Notification Toast */}
+      {roundNotification && (
+        <div className="bg-gradient-to-r from-emerald-950 to-indigo-950 border border-emerald-500/40 p-3 rounded-2xl text-xs text-emerald-200 flex items-center justify-between animate-in fade-in slide-in-from-top-2">
+          <div className="flex items-center gap-2">
+            <Sparkles className="w-4 h-4 text-emerald-400 shrink-0" />
+            <span className="font-bold">{roundNotification}</span>
+          </div>
+          <span className="text-[10px] text-emerald-400/80 font-mono">
+            (Preguntas no vistas previamente)
+          </span>
+        </div>
+      )}
 
       {!gameFinished ? (
         <div className="space-y-6 relative z-10">
           
           {/* Category, Question Number & Wildcards */}
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 flex-wrap">
               <span className="text-xs font-extrabold text-slate-400 font-mono">
                 Pregunta {currentIdx + 1} de {questions.length}
               </span>
@@ -435,7 +461,7 @@ export const TriviaGame: React.FC<TriviaGameProps> = ({ onEarnRewards }) => {
           </div>
 
           <div className="space-y-2">
-            <h4 className="text-2xl sm:text-3xl font-black text-white">¡Trivia Completada con Éxito!</h4>
+            <h4 className="text-2xl sm:text-3xl font-black text-white">¡Ronda Completada con Éxito!</h4>
             <p className="text-xs sm:text-sm text-slate-300">
               Respondiste correctamente <strong className="text-emerald-400">{correctAnswersCount} de {questions.length}</strong> preguntas.
             </p>
@@ -458,13 +484,13 @@ export const TriviaGame: React.FC<TriviaGameProps> = ({ onEarnRewards }) => {
             </div>
           </div>
 
-          <div className="pt-2 flex justify-center gap-3">
+          <div className="pt-2 flex flex-wrap items-center justify-center gap-3">
             <button
               onClick={handleRestart}
-              className="px-6 py-3 bg-indigo-600 hover:bg-indigo-500 text-white rounded-2xl text-xs font-black shadow-xl inline-flex items-center gap-2 cursor-pointer transition-transform hover:scale-105"
+              className="px-6 py-3 bg-amber-400 hover:bg-amber-300 text-slate-950 rounded-2xl text-xs font-black shadow-xl inline-flex items-center gap-2 cursor-pointer transition-transform hover:scale-105"
             >
-              <RotateCcw className="w-4 h-4" />
-              <span>Jugar Nuevamente</span>
+              <RefreshCw className="w-4 h-4" />
+              <span>Jugar con Nuevas Preguntas</span>
             </button>
           </div>
         </div>
@@ -513,6 +539,8 @@ export const TriviaGame: React.FC<TriviaGameProps> = ({ onEarnRewards }) => {
                   <option value="Gaming & Tech">Gaming & Tech</option>
                   <option value="Cultura">Cultura</option>
                   <option value="Lógica">Lógica</option>
+                  <option value="Matemáticas">Matemáticas</option>
+                  <option value="Historia & Geografía">Historia & Geografía</option>
                 </select>
               </div>
 
