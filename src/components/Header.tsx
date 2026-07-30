@@ -1,5 +1,5 @@
 import React from 'react';
-import { Key, LayoutDashboard, Target, Gamepad2, Calendar, FileText, User, Users, QrCode, Flame, Award, Timer, LogOut } from 'lucide-react';
+import { Key, LayoutDashboard, Target, Gamepad2, Calendar, FileText, User, Users, QrCode, Flame, Award, Timer, LogOut, Video } from 'lucide-react';
 import { UserProfile } from '../types';
 
 export type NavigationTab = 'dashboard' | 'challenges' | 'game' | 'calendar' | 'notes' | 'profile' | 'community';
@@ -10,6 +10,7 @@ interface HeaderProps {
   user: UserProfile;
   onOpenQrModal: () => void;
   onOpenFocusTimer: () => void;
+  onOpenVideoTour?: () => void;
   onLogout?: () => void;
 }
 
@@ -19,6 +20,7 @@ export const Header: React.FC<HeaderProps> = ({
   user,
   onOpenQrModal,
   onOpenFocusTimer,
+  onOpenVideoTour,
   onLogout,
 }) => {
   const navItems: { id: NavigationTab; label: string; icon: React.FC<{ className?: string }> }[] = [
@@ -88,6 +90,18 @@ export const Header: React.FC<HeaderProps> = ({
             <Timer className="w-4 h-4 text-indigo-600 animate-pulse" />
             <span className="hidden sm:inline">Modo Enfoque</span>
           </button>
+
+          {/* Video Explicativo Tour Button */}
+          {onOpenVideoTour && (
+            <button
+              onClick={onOpenVideoTour}
+              className="inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 text-xs font-black transition-transform hover:scale-105 cursor-pointer shadow-xs border border-amber-300"
+              title="Ver Video Explicativo e Interactivo de la plataforma"
+            >
+              <Video className="w-4 h-4 text-slate-950 fill-slate-950" />
+              <span className="hidden sm:inline">Video Explicativo</span>
+            </button>
+          )}
 
           {/* Streak Badge */}
           <div 

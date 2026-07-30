@@ -11,6 +11,7 @@ import { QrModal } from './components/QrModal';
 import { FocusTimerModal } from './components/FocusTimerModal';
 import { AuthModal, AuthAccount } from './components/AuthModal';
 import { MilestoneRewardModal, MilestoneRewardData } from './components/MilestoneRewardModal';
+import { PlatformVideoTour } from './components/PlatformVideoTour';
 import { getMilestoneReward, getUnclaimedMilestones } from './utils/milestones';
 
 import {
@@ -77,6 +78,7 @@ export default function App() {
   const [communityPosts, setCommunityPosts] = useState<CommunityPost[]>(INITIAL_COMMUNITY_POSTS);
   const [isQrModalOpen, setIsQrModalOpen] = useState(false);
   const [isFocusTimerOpen, setIsFocusTimerOpen] = useState(false);
+  const [isVideoTourOpen, setIsVideoTourOpen] = useState(false);
 
   // Sync user profile to localStorage
   useEffect(() => {
@@ -434,6 +436,7 @@ export default function App() {
         user={user}
         onOpenQrModal={() => setIsQrModalOpen(true)}
         onOpenFocusTimer={() => setIsFocusTimerOpen(true)}
+        onOpenVideoTour={() => setIsVideoTourOpen(true)}
         onLogout={handleLogout}
       />
 
@@ -448,6 +451,7 @@ export default function App() {
             onToggleChallenge={handleToggleChallenge}
             onNavigate={setActiveTab}
             onOpenFocusTimer={() => setIsFocusTimerOpen(true)}
+            onOpenVideoTour={() => setIsVideoTourOpen(true)}
             onClaimMilestone={handleOpenClaimMilestoneModal}
           />
         )}
@@ -533,6 +537,13 @@ export default function App() {
         isOpen={isFocusTimerOpen}
         onClose={() => setIsFocusTimerOpen(false)}
         onEarnRewards={handleEarnGameRewards}
+      />
+
+      {/* Platform Interactive Video Tour Modal */}
+      <PlatformVideoTour
+        isOpen={isVideoTourOpen}
+        onClose={() => setIsVideoTourOpen(false)}
+        onNavigateToTab={setActiveTab}
       />
 
       {/* 1,000 XP Milestone Reward Modal */}

@@ -1,6 +1,6 @@
 import React from 'react';
 import { UserProfile, Challenge, CalendarEvent, NoteItem } from '../types';
-import { Sparkles, Flame, Award, Coins, CheckCircle2, Circle, Target, Gamepad2, Calendar as CalendarIcon, FileText, ArrowRight, Zap, Trophy, ShieldCheck, HeartPulse, BookOpen, Smile, Plus, Timer, Brain } from 'lucide-react';
+import { Sparkles, Flame, Award, Coins, CheckCircle2, Circle, Target, Gamepad2, Calendar as CalendarIcon, FileText, ArrowRight, Zap, Trophy, ShieldCheck, HeartPulse, BookOpen, Smile, Plus, Timer, Brain, Video } from 'lucide-react';
 import { NavigationTab } from './Header';
 import { MilestonesSection } from './MilestonesSection';
 
@@ -12,6 +12,7 @@ interface DashboardProps {
   onToggleChallenge: (id: string) => void;
   onNavigate: (tab: NavigationTab) => void;
   onOpenFocusTimer: () => void;
+  onOpenVideoTour?: () => void;
   onClaimMilestone?: (milestoneXp: number) => void;
 }
 
@@ -23,6 +24,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
   onToggleChallenge,
   onNavigate,
   onOpenFocusTimer,
+  onOpenVideoTour,
   onClaimMilestone,
 }) => {
   // Daily challenges logic: Max 6 active daily challenges per day, completed ones are removed from active view
@@ -78,12 +80,22 @@ export const Dashboard: React.FC<DashboardProps> = ({
           </div>
 
           {/* Focus Mode & Coins Quick Banner */}
-          <div className="flex flex-col gap-3 shrink-0">
+          <div className="flex flex-col gap-2.5 shrink-0">
+            {onOpenVideoTour && (
+              <button
+                onClick={onOpenVideoTour}
+                className="px-5 py-3 rounded-2xl bg-gradient-to-r from-amber-400 via-amber-300 to-emerald-400 hover:from-amber-300 hover:to-emerald-300 text-slate-950 font-black text-xs shadow-lg transition-transform hover:scale-105 flex items-center justify-center gap-2 cursor-pointer border border-amber-200"
+              >
+                <Video className="w-4 h-4 text-slate-950 fill-slate-950" />
+                <span>📹 Ver Video Explicativo de la Plataforma</span>
+              </button>
+            )}
+
             <button
               onClick={onOpenFocusTimer}
-              className="px-5 py-3 rounded-2xl bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-300 hover:to-amber-400 text-slate-950 font-black text-xs shadow-lg transition-transform hover:scale-105 flex items-center justify-center gap-2 cursor-pointer"
+              className="px-5 py-2.5 rounded-2xl bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer border border-slate-700"
             >
-              <Timer className="w-4 h-4 text-slate-950" />
+              <Timer className="w-4 h-4 text-amber-300" />
               <span>🍅 Iniciar Pomodoro Estudiantil</span>
             </button>
 
