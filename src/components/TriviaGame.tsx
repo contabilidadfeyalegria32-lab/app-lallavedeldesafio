@@ -269,7 +269,7 @@ export const TriviaGame: React.FC<TriviaGameProps> = ({ onEarnRewards }) => {
             </div>
 
             <span className="text-[11px] font-mono px-2.5 py-0.5 rounded-full bg-slate-800 text-slate-300 border border-slate-700">
-              Banco: {totalBankSize} preg.
+              Banco: {totalBankSize} preguntas
             </span>
           </div>
 
