@@ -3,7 +3,8 @@ import { UserProfile } from '../types';
 import { AVATAR_PRESETS, INITIAL_USER_PROFILE } from '../data/initialData';
 import { 
   Key, Lock, User, AtSign, Eye, EyeOff, Upload, Check, 
-  Sparkles, ShieldCheck, ArrowRight, Camera, UserPlus, LogIn, AlertCircle
+  Sparkles, ShieldCheck, ArrowRight, Camera, UserPlus, LogIn, AlertCircle,
+  Smartphone, Trash2, Zap, Flame, Award, Coins, ChevronRight, CheckCircle2
 } from 'lucide-react';
 
 export interface AuthAccount {
@@ -13,27 +14,36 @@ export interface AuthAccount {
   passwordHash: string;
   avatarUrl: string;
   profileData: UserProfile;
+  rememberPassword?: boolean;
 }
 
 interface AuthModalProps {
   onLoginSuccess: (userProfile: UserProfile, password?: string) => void;
   savedAccounts: AuthAccount[];
+  onDeleteAccount?: (accountId: string) => void;
 }
 
 export const AuthModal: React.FC<AuthModalProps> = ({
   onLoginSuccess,
   savedAccounts,
+  onDeleteAccount,
 }) => {
-  const [mode, setMode] = useState<'login' | 'register'>(
-    savedAccounts.length > 0 ? 'login' : 'register'
+  const [localAccounts, setLocalAccounts] = useState<AuthAccount[]>(savedAccounts);
+
+  // Initial mode: if there are saved accounts, start in 'quick_accounts' view
+  const [mode, setMode] = useState<'quick_accounts' | 'login' | 'register'>(
+    localAccounts.length > 0 ? 'quick_accounts' : 'register'
   );
-  
-  // Login State
+
+  // Remember password setting for 1-Tap entry
+  const [rememberOnDevice, setRememberOnDevice] = useState(true);
+
+  // Login Form State
   const [loginUsername, setLoginUsername] = useState('');
   const [loginPassword, setLoginPassword] = useState('');
   const [loginError, setLoginError] = useState('');
 
-  // Register State
+  // Register Form State
   const [regName, setRegName] = useState('');
   const [regUsername, setRegUsername] = useState('');
   const [regPassword, setRegPassword] = useState('');
@@ -43,7 +53,13 @@ export const AuthModal: React.FC<AuthModalProps> = ({
 
   // Shared UX states
   const [showPassword, setShowPassword] = useState(false);
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Keep localAccounts synced if parent props update
+  React.useEffect(() => {
+    setLocalAccounts(savedAccounts);
+  }, [savedAccounts]);
 
   // File upload handler
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -60,6 +76,44 @@ export const AuthModal: React.FC<AuthModalProps> = ({
         }
       };
       reader.readAsDataURL(file);
+    }
+  };
+
+  // Direct 1-Tap Login for saved account
+  const handleOneTapLogin = (acc: AuthAccount) => {
+    try {
+      localStorage.setItem('app_active_account_id', acc.id);
+      localStorage.setItem('app_user_profile', JSON.stringify(acc.profileData));
+      localStorage.setItem('app_auth_session', 'true');
+    } catch (err) {
+      console.error('Error setting 1-tap session', err);
+    }
+    onLoginSuccess(acc.profileData, acc.passwordHash);
+  };
+
+  // Pre-fill login form with selected account
+  const handleSelectAccountForPassword = (acc: AuthAccount) => {
+    setLoginUsername(acc.username);
+    setLoginPassword(acc.rememberPassword ? acc.passwordHash : '');
+    setLoginError('');
+    setMode('login');
+  };
+
+  // Delete saved account from device
+  const handleRemoveAccount = (accountId: string) => {
+    const updated = localAccounts.filter((a) => a.id !== accountId);
+    setLocalAccounts(updated);
+    setConfirmDeleteId(null);
+    try {
+      localStorage.setItem('app_registered_accounts', JSON.stringify(updated));
+    } catch (e) {}
+
+    if (onDeleteAccount) {
+      onDeleteAccount(accountId);
+    }
+
+    if (updated.length === 0 && mode === 'quick_accounts') {
+      setMode('register');
     }
   };
 
@@ -93,11 +147,11 @@ export const AuthModal: React.FC<AuthModalProps> = ({
     }
 
     // Check if username is taken
-    const existing = savedAccounts.find(
+    const existing = localAccounts.find(
       (a) => a.username.toLowerCase() === cleanUsername.toLowerCase()
     );
     if (existing) {
-      setRegError(`El nombre de usuario ${cleanUsername} ya está registrado. Intenta con otro o Inicia Sesión.`);
+      setRegError(`El nombre de usuario ${cleanUsername} ya está guardado en este dispositivo. Elige otro o Inicia Sesión.`);
       return;
     }
 
@@ -116,20 +170,24 @@ export const AuthModal: React.FC<AuthModalProps> = ({
       title: 'Novato Estudiantil 🌱',
     };
 
-    // Save into list of accounts
+    // Save account locally
     const newAccount: AuthAccount = {
-      id: Date.now().toString(),
+      id: `acc_${Date.now()}`,
       name: regName.trim(),
       username: cleanUsername,
       passwordHash: regPassword,
       avatarUrl: regAvatarUrl,
       profileData: newProfile,
+      rememberPassword: rememberOnDevice,
     };
 
-    const updatedAccounts = [...savedAccounts, newAccount];
+    const updatedAccounts = [...localAccounts, newAccount];
+    setLocalAccounts(updatedAccounts);
+
     try {
       localStorage.setItem('app_registered_accounts', JSON.stringify(updatedAccounts));
       localStorage.setItem('app_active_account_id', newAccount.id);
+      localStorage.setItem('app_auth_session', 'true');
     } catch (err) {
       console.error('Error saving account locally', err);
     }
@@ -137,7 +195,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
     onLoginSuccess(newProfile, regPassword);
   };
 
-  // Submit Login
+  // Submit Manual Login
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
     setLoginError('');
@@ -148,25 +206,36 @@ export const AuthModal: React.FC<AuthModalProps> = ({
     }
 
     // Find account
-    const matched = savedAccounts.find(
+    const matched = localAccounts.find(
       (a) =>
         a.username.toLowerCase() === cleanUser.toLowerCase() ||
         a.name.toLowerCase() === loginUsername.trim().toLowerCase()
     );
 
     if (!matched) {
-      setLoginError('No encontramos ningún usuario registrado con ese nombre. Crea una cuenta nueva.');
+      setLoginError('No encontramos ese usuario en las cuentas de este dispositivo. Si eres nuevo, puedes Registrarte.');
       return;
     }
 
     if (matched.passwordHash && matched.passwordHash !== loginPassword) {
-      setLoginError('Contraseña incorrecta. Revisa e intentalo de nuevo.');
+      setLoginError('Contraseña incorrecta. Verifica e inténtalo nuevamente.');
       return;
+    }
+
+    // Update remember setting if needed
+    if (rememberOnDevice && !matched.rememberPassword) {
+      matched.rememberPassword = true;
+      const updated = localAccounts.map((a) => (a.id === matched.id ? matched : a));
+      setLocalAccounts(updated);
+      try {
+        localStorage.setItem('app_registered_accounts', JSON.stringify(updated));
+      } catch (e) {}
     }
 
     // Success
     try {
       localStorage.setItem('app_active_account_id', matched.id);
+      localStorage.setItem('app_auth_session', 'true');
     } catch (err) {
       console.error('Error saving active account', err);
     }
@@ -181,25 +250,25 @@ export const AuthModal: React.FC<AuthModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md overflow-y-auto">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/80 backdrop-blur-md overflow-y-auto">
       <div className="w-full max-w-lg bg-white rounded-3xl shadow-2xl border border-slate-200 overflow-hidden my-auto animate-in fade-in zoom-in-95 duration-200">
         
         {/* Banner Header */}
-        <div className="bg-gradient-to-tr from-indigo-900 via-indigo-700 to-indigo-600 text-white p-6 sm:p-8 text-center relative overflow-hidden">
+        <div className="bg-gradient-to-tr from-indigo-900 via-indigo-800 to-slate-900 text-white p-6 sm:p-8 text-center relative overflow-hidden">
           <div className="absolute -top-10 -right-10 w-40 h-40 bg-amber-400/20 rounded-full blur-2xl pointer-events-none" />
           <div className="absolute -bottom-10 -left-10 w-40 h-40 bg-emerald-400/20 rounded-full blur-2xl pointer-events-none" />
 
           {/* Logo Badge */}
-          <div className="w-14 h-14 mx-auto rounded-2xl bg-gradient-to-tr from-amber-400 to-emerald-400 text-slate-950 flex items-center justify-center shadow-lg mb-3">
+          <div className="w-14 h-14 mx-auto rounded-2xl bg-gradient-to-tr from-amber-400 via-emerald-400 to-indigo-400 text-slate-950 flex items-center justify-center shadow-lg mb-3 border border-amber-200">
             <Key className="w-8 h-8 text-slate-950 transform -rotate-45" />
           </div>
 
           <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-400/20 text-amber-300 border border-amber-400/30 text-[11px] font-black tracking-wider mb-2">
-            <Lock className="w-3.5 h-3.5 text-amber-300" />
-            <span>Acceso Obligatorio — Inicia Sesión o Regístrate</span>
+            <Smartphone className="w-3.5 h-3.5 text-amber-300 animate-pulse" />
+            <span>Guarda tus Cuentas en tu Celular / Dispositivo</span>
           </div>
 
-          <h2 className="text-2xl font-black tracking-tight text-white">
+          <h2 className="text-2xl sm:text-3xl font-black tracking-tight text-white">
             La Llave del Desafío
           </h2>
           <p className="text-xs text-indigo-100 font-medium mt-1">
@@ -207,44 +276,214 @@ export const AuthModal: React.FC<AuthModalProps> = ({
           </p>
 
           {/* Mode Switch Pills */}
-          <div className="flex items-center justify-center gap-1 bg-indigo-950/40 p-1 rounded-2xl border border-indigo-400/30 max-w-xs mx-auto mt-6">
-            <button
-              onClick={() => { setMode('register'); setRegError(''); }}
-              className={`flex-1 py-2 text-xs font-extrabold rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
-                mode === 'register'
-                  ? 'bg-amber-400 text-slate-950 shadow-md'
-                  : 'text-indigo-200 hover:text-white hover:bg-white/10'
-              }`}
-            >
-              <UserPlus className="w-3.5 h-3.5" />
-              <span>Registrarse</span>
-            </button>
+          <div className="flex items-center justify-center gap-1 bg-indigo-950/60 p-1.5 rounded-2xl border border-indigo-400/30 max-w-md mx-auto mt-6">
+            {localAccounts.length > 0 && (
+              <button
+                onClick={() => setMode('quick_accounts')}
+                className={`flex-1 py-2 px-2 text-xs font-extrabold rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1 ${
+                  mode === 'quick_accounts'
+                    ? 'bg-amber-400 text-slate-950 shadow-md scale-102 font-black'
+                    : 'text-indigo-200 hover:text-white hover:bg-white/10'
+                }`}
+              >
+                <Smartphone className="w-3.5 h-3.5" />
+                <span>Mis Cuentas ({localAccounts.length})</span>
+              </button>
+            )}
 
             <button
               onClick={() => { setMode('login'); setLoginError(''); }}
-              className={`flex-1 py-2 text-xs font-extrabold rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
+              className={`flex-1 py-2 px-2 text-xs font-extrabold rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1 ${
                 mode === 'login'
-                  ? 'bg-amber-400 text-slate-950 shadow-md'
+                  ? 'bg-amber-400 text-slate-950 shadow-md scale-102 font-black'
                   : 'text-indigo-200 hover:text-white hover:bg-white/10'
               }`}
             >
               <LogIn className="w-3.5 h-3.5" />
               <span>Iniciar Sesión</span>
             </button>
+
+            <button
+              onClick={() => { setMode('register'); setRegError(''); }}
+              className={`flex-1 py-2 px-2 text-xs font-extrabold rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1 ${
+                mode === 'register'
+                  ? 'bg-amber-400 text-slate-950 shadow-md scale-102 font-black'
+                  : 'text-indigo-200 hover:text-white hover:bg-white/10'
+              }`}
+            >
+              <UserPlus className="w-3.5 h-3.5" />
+              <span>Crear Cuenta</span>
+            </button>
           </div>
         </div>
 
-        {/* Form Body */}
+        {/* Modal Body */}
         <div className="p-6 sm:p-8 space-y-6">
-          
-          {/* REGISTRATION FORM */}
+
+          {/* MODE 1: QUICK SAVED ACCOUNTS ON DEVICE (1-TAP LOGIN) */}
+          {mode === 'quick_accounts' && (
+            <div className="space-y-5 animate-in fade-in duration-200">
+              
+              <div className="text-center sm:text-left">
+                <div className="flex items-center gap-2 justify-center sm:justify-start text-emerald-600 font-extrabold text-xs mb-1">
+                  <CheckCircle2 className="w-4 h-4" />
+                  <span>Cuentas Guardadas en este Dispositivo Móvil / PC</span>
+                </div>
+                <h3 className="text-xl font-black text-slate-900">
+                  Selecciona tu Cuenta de Estudiante
+                </h3>
+                <p className="text-xs text-slate-500 mt-1 leading-relaxed">
+                  Ingresa de forma instantánea en 1-Tap. Tus monedas, medallas y niveles están seguros y nunca se borrarán.
+                </p>
+              </div>
+
+              {/* Saved Accounts List */}
+              <div className="space-y-3 max-h-80 overflow-y-auto pr-1 no-scrollbar">
+                {localAccounts.map((acc) => {
+                  const p = acc.profileData;
+                  const isConfirmingDelete = confirmDeleteId === acc.id;
+
+                  return (
+                    <div
+                      key={acc.id}
+                      className="bg-gradient-to-r from-slate-50 via-indigo-50/40 to-slate-50 rounded-2xl border border-indigo-100 p-4 hover:border-indigo-300 transition-all shadow-xs relative group"
+                    >
+                      <div className="flex items-center justify-between gap-3">
+                        
+                        {/* Avatar & User info */}
+                        <div 
+                          onClick={() => handleOneTapLogin(acc)}
+                          className="flex items-center gap-3.5 cursor-pointer flex-1 min-w-0"
+                        >
+                          <div className="relative shrink-0">
+                            <div className="w-13 h-13 rounded-2xl p-0.5 bg-gradient-to-tr from-amber-400 to-indigo-600 shadow-xs overflow-hidden">
+                              <img
+                                src={acc.avatarUrl || p.avatarUrl || AVATAR_PRESETS[0].url}
+                                alt={acc.name}
+                                className="w-full h-full object-cover rounded-[14px]"
+                              />
+                            </div>
+                            <span className="absolute -bottom-1 -right-1 bg-slate-900 text-amber-300 font-black text-[9px] px-1.5 py-0.2 rounded-full border border-white">
+                              Nv.{p.level || 1}
+                            </span>
+                          </div>
+
+                          <div className="min-w-0 space-y-0.5">
+                            <div className="flex items-center gap-2">
+                              <h4 className="text-sm font-extrabold text-slate-900 truncate">
+                                {acc.name}
+                              </h4>
+                              <span className="text-[10px] font-bold px-2 py-0.2 rounded-md bg-amber-100 text-amber-900 border border-amber-200 shrink-0">
+                                {p.title || 'Estudiante'}
+                              </span>
+                            </div>
+                            <p className="text-xs font-mono font-bold text-indigo-600 truncate">
+                              {acc.username}
+                            </p>
+
+                            {/* Stat badges */}
+                            <div className="flex items-center gap-3 text-[11px] font-extrabold text-slate-600 pt-0.5">
+                              <span className="flex items-center gap-1 text-amber-700">
+                                <Flame className="w-3 h-3 text-amber-500 fill-amber-500" />
+                                {p.streakDays || 1}d
+                              </span>
+                              <span className="flex items-center gap-1 text-emerald-700">
+                                <Coins className="w-3 h-3 text-emerald-500" />
+                                {p.coins || 100}
+                              </span>
+                              <span className="flex items-center gap-1 text-indigo-700">
+                                <Award className="w-3 h-3 text-indigo-500" />
+                                {p.xp || 100} XP
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Actions */}
+                        <div className="flex items-center gap-2 shrink-0">
+                          {isConfirmingDelete ? (
+                            <div className="flex items-center gap-1 bg-rose-50 p-1 rounded-xl border border-rose-200">
+                              <button
+                                onClick={() => handleRemoveAccount(acc.id)}
+                                className="px-2 py-1 bg-rose-600 text-white rounded-lg text-[10px] font-black cursor-pointer hover:bg-rose-700"
+                              >
+                                Confirmar
+                              </button>
+                              <button
+                                onClick={() => setConfirmDeleteId(null)}
+                                className="px-1.5 py-1 text-slate-500 hover:text-slate-800 text-[10px] font-bold cursor-pointer"
+                              >
+                                Cancelar
+                              </button>
+                            </div>
+                          ) : (
+                            <>
+                              <button
+                                onClick={() => handleOneTapLogin(acc)}
+                                className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-black shadow-xs transition-transform hover:scale-105 cursor-pointer"
+                                title="Ingresar con 1-Tap sin escribir contraseña"
+                              >
+                                <Zap className="w-3.5 h-3.5 text-amber-300 fill-amber-300 animate-pulse" />
+                                <span>Entrar</span>
+                              </button>
+
+                              <button
+                                onClick={() => setConfirmDeleteId(acc.id)}
+                                className="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition-colors cursor-pointer"
+                                title="Quitar cuenta de este dispositivo"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </button>
+                            </>
+                          )}
+                        </div>
+
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Permanent Storage Notice */}
+              <div className="bg-emerald-50/80 border border-emerald-200/90 rounded-2xl p-3.5 text-xs text-emerald-950 flex items-start gap-2.5">
+                <ShieldCheck className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
+                <div className="space-y-0.5">
+                  <p className="font-extrabold text-[11px]">Almacenamiento Seguro e Ininterrumpido</p>
+                  <p className="text-[11px] text-emerald-800 leading-normal">
+                    Tus cuentas están guardadas localmente en este celular o computador. Puedes cerrar e iniciar sesión cuantas veces quieras sin perder tu avance.
+                  </p>
+                </div>
+              </div>
+
+              {/* Bottom add new or login manual */}
+              <div className="pt-2 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-3">
+                <button
+                  onClick={() => { setMode('register'); setRegError(''); }}
+                  className="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-black shadow-xs cursor-pointer"
+                >
+                  <UserPlus className="w-4 h-4 text-amber-400" />
+                  <span>Registrar Nueva Cuenta</span>
+                </button>
+
+                <button
+                  onClick={() => { setMode('login'); setLoginError(''); }}
+                  className="text-xs font-extrabold text-indigo-600 hover:text-indigo-800 underline cursor-pointer"
+                >
+                  Ingresar manualmente con otro usuario
+                </button>
+              </div>
+
+            </div>
+          )}
+
+          {/* MODE 2: REGISTRATION FORM */}
           {mode === 'register' && (
             <form onSubmit={handleRegister} className="space-y-5">
               
               <div className="text-center sm:text-left">
                 <h3 className="text-lg font-extrabold text-slate-900">Crea tu Cuenta de Estudiante</h3>
                 <p className="text-xs text-slate-500">
-                  Ingresa tu usuario, contraseña y foto de perfil para acceder de forma segura.
+                  Ingresa tus datos y foto de perfil. Tu cuenta se guardará en tu celular/dispositivo de forma permanente.
                 </p>
               </div>
 
@@ -267,7 +506,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                     required
                     value={regName}
                     onChange={(e) => setRegName(e.target.value)}
-                    placeholder="Ej. Sofia Ramírez"
+                    placeholder="Ej. Sofía Ramírez"
                     className="w-full text-xs pl-10 pr-4 py-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 font-medium outline-none"
                   />
                 </div>
@@ -338,8 +577,8 @@ export const AuthModal: React.FC<AuthModalProps> = ({
               {/* Profile Avatar Selection */}
               <div className="space-y-3 pt-1">
                 <label className="text-xs font-extrabold text-slate-800 flex items-center justify-between">
-                  <span>Selecciona tu Foto de Perfil</span>
-                  <span className="text-[10px] text-indigo-600 font-semibold">Elige o sube una personalizada</span>
+                  <span>Foto de Perfil</span>
+                  <span className="text-[10px] text-indigo-600 font-semibold">Elige o sube una imagen</span>
                 </label>
 
                 {/* Upload or Preset Grid */}
@@ -362,14 +601,14 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                       className="w-full inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-xl bg-white border border-slate-300 hover:border-indigo-500 text-slate-700 text-xs font-bold transition-all cursor-pointer shadow-2xs"
                     >
                       <Camera className="w-3.5 h-3.5 text-indigo-600" />
-                      <span>Subir Imagen desde el Dispositivo</span>
+                      <span>Subir Imagen desde el Celular</span>
                     </button>
 
                     <input
                       type="url"
                       value={regAvatarUrl}
                       onChange={(e) => setRegAvatarUrl(e.target.value)}
-                      placeholder="o pega la URL de tu foto de perfil..."
+                      placeholder="o pega URL de la imagen..."
                       className="w-full text-[11px] px-2.5 py-1.5 rounded-lg border border-slate-200 bg-white font-mono text-slate-700 focus:ring-1 focus:ring-indigo-500 outline-none"
                     />
                   </div>
@@ -401,25 +640,39 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                 </div>
               </div>
 
+              {/* Remember on Device Checkbox */}
+              <label className="flex items-center gap-2.5 bg-amber-50/80 p-3 rounded-2xl border border-amber-200 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={rememberOnDevice}
+                  onChange={(e) => setRememberOnDevice(e.target.checked)}
+                  className="w-4 h-4 rounded text-indigo-600 focus:ring-indigo-500 accent-indigo-600 cursor-pointer"
+                />
+                <span className="text-xs font-extrabold text-amber-950 flex items-center gap-1.5">
+                  <Smartphone className="w-4 h-4 text-amber-700 shrink-0" />
+                  <span>Guardar cuenta en este celular para Inicio de Sesión de 1-Tap</span>
+                </span>
+              </label>
+
               {/* Submit Button */}
               <button
                 type="submit"
                 className="w-full py-3 px-4 rounded-2xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-extrabold shadow-md hover:shadow-indigo-200 transition-all cursor-pointer flex items-center justify-center gap-2"
               >
-                <span>Crear Cuenta e Iniciar Mi Experiencia</span>
+                <span>Crear Cuenta y Guardar en Dispositivo</span>
                 <ArrowRight className="w-4 h-4" />
               </button>
 
             </form>
           )}
 
-          {/* LOGIN FORM */}
+          {/* MODE 3: MANUAL LOGIN FORM */}
           {mode === 'login' && (
             <form onSubmit={handleLogin} className="space-y-5">
               <div className="text-center sm:text-left">
-                <h3 className="text-lg font-extrabold text-slate-900">Bienvenido de Nuevo</h3>
+                <h3 className="text-lg font-extrabold text-slate-900">Iniciar Sesión de Estudiante</h3>
                 <p className="text-xs text-slate-500">
-                  Ingresa tu usuario y contraseña para acceder a tus progresos.
+                  Ingresa tu usuario y contraseña. Tu cuenta quedará lista para accesos rápidos.
                 </p>
               </div>
 
@@ -473,6 +726,20 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                 </div>
               </div>
 
+              {/* Remember Checkbox */}
+              <label className="flex items-center gap-2.5 bg-indigo-50/80 p-3 rounded-2xl border border-indigo-200 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={rememberOnDevice}
+                  onChange={(e) => setRememberOnDevice(e.target.checked)}
+                  className="w-4 h-4 rounded text-indigo-600 focus:ring-indigo-500 accent-indigo-600 cursor-pointer"
+                />
+                <span className="text-xs font-extrabold text-indigo-950 flex items-center gap-1.5">
+                  <Zap className="w-4 h-4 text-amber-500 fill-amber-500 shrink-0" />
+                  <span>Activar Inicio de Sesión de 1-Tap para esta cuenta</span>
+                </span>
+              </label>
+
               {/* Submit Button */}
               <button
                 type="submit"
@@ -486,25 +753,26 @@ export const AuthModal: React.FC<AuthModalProps> = ({
 
           {/* Quick Demo Access Option */}
           <div className="pt-2 border-t border-slate-100 text-center space-y-2">
-            <p className="text-[11px] text-slate-400">
-              ¿Quieres probar la plataforma al instante?
+            <p className="text-[11px] text-slate-400 font-medium">
+              ¿Quieres explorar la plataforma inmediatamente sin registrarte?
             </p>
             <button
               type="button"
               onClick={handleQuickDemoLogin}
-              className="text-xs font-extrabold text-indigo-600 hover:text-indigo-800 underline cursor-pointer"
+              className="text-xs font-extrabold text-indigo-600 hover:text-indigo-800 underline cursor-pointer inline-flex items-center gap-1"
             >
-              ⚡ Entrar como Alex Rivera (Cuenta Demo de Muestra)
+              <Zap className="w-3.5 h-3.5 text-amber-500 fill-amber-500" />
+              <span>Entrar como Alex Rivera (Cuenta Demo de Muestra)</span>
             </button>
           </div>
 
         </div>
 
         {/* Footer info */}
-        <div className="bg-slate-50 px-6 py-3 border-t border-slate-100 flex items-center justify-between text-[10px] text-slate-500">
+        <div className="bg-slate-50 px-6 py-3 border-t border-slate-100 flex items-center justify-between text-[10px] text-slate-500 font-semibold">
           <span className="flex items-center gap-1">
             <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
-            Acceso seguro local
+            Acceso local seguro en tu dispositivo
           </span>
           <span>La Llave del Desafío v2.0</span>
         </div>

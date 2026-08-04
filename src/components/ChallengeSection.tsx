@@ -95,15 +95,15 @@ export const ChallengeSection: React.FC<ChallengeSectionProps> = ({
   return (
     <div className="space-y-6 animate-in fade-in duration-200">
       
-      {/* Top Banner */}
-      <div className="bg-white rounded-2xl border border-slate-200/90 shadow-sm p-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
+      {/* Top Banner - Soft Lavender Indigo Pastel */}
+      <div className="bg-gradient-to-r from-indigo-100 via-purple-50 to-indigo-50 rounded-2xl border border-indigo-200/90 shadow-sm p-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md bg-indigo-50 text-indigo-700 text-xs font-semibold mb-1">
-            <Target className="w-3.5 h-3.5" />
+          <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md bg-indigo-200/80 text-indigo-950 text-xs font-bold mb-1">
+            <Target className="w-3.5 h-3.5 text-indigo-700" />
             <span>Sistema de Crecimiento Personal</span>
           </div>
-          <h2 className="text-2xl font-bold text-slate-900 tracking-tight">Catálogo de Desafíos</h2>
-          <p className="text-xs text-slate-500 mt-0.5">
+          <h2 className="text-2xl font-black text-slate-900 tracking-tight">Catálogo de Desafíos Estudiantiles</h2>
+          <p className="text-xs font-medium text-slate-700 mt-0.5">
             Selecciona misiones en Bienestar, Salud, Educación y Entretenimiento para ganar XP y subir de nivel.
           </p>
         </div>

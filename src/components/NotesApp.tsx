@@ -90,17 +90,17 @@ export const NotesApp: React.FC<NotesAppProps> = ({
   };
 
   return (
-    <div className="bg-white rounded-2xl border border-slate-200/90 shadow-sm p-6 sm:p-8 space-y-6 animate-in fade-in duration-200">
+    <div className="bg-white rounded-2xl border border-rose-200/80 shadow-sm p-6 sm:p-8 space-y-6 animate-in fade-in duration-200">
       
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 pb-4">
+      {/* Header Banner - Soft Rose Pink Pastel */}
+      <div className="bg-gradient-to-r from-rose-100 via-pink-50 to-rose-50 rounded-2xl border border-rose-200/90 p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md bg-emerald-50 text-emerald-700 text-xs font-semibold mb-1">
-            <FileText className="w-3.5 h-3.5" />
+          <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md bg-rose-200/80 text-rose-950 text-xs font-bold mb-1">
+            <FileText className="w-3.5 h-3.5 text-rose-700" />
             <span>Bloc de Notas Privado</span>
           </div>
-          <h2 className="text-2xl font-bold text-slate-900 tracking-tight">Notas y Tareas Personales</h2>
-          <p className="text-xs text-slate-500 mt-0.5">
+          <h2 className="text-2xl font-black text-slate-900 tracking-tight">Notas y Apuntes de Estudio</h2>
+          <p className="text-xs text-slate-700 font-medium mt-0.5">
             Organiza tus pensamientos, listas de tareas, ideas y reflexiones con carpetas y etiquetas.
           </p>
         </div>

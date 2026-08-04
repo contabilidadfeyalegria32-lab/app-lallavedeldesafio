@@ -94,8 +94,8 @@ export const UserProfileView: React.FC<UserProfileViewProps> = ({
         </div>
       )}
 
-      {/* Top Profile Header Card */}
-      <div className="bg-white rounded-2xl border border-slate-200/90 shadow-sm p-6 sm:p-8 space-y-6 relative overflow-hidden">
+      {/* Top Profile Header Card - Soft Purple Pastel */}
+      <div className="bg-gradient-to-r from-purple-100 via-fuchsia-50 to-purple-50 rounded-2xl border border-purple-200/90 shadow-sm p-6 sm:p-8 space-y-6 relative overflow-hidden">
         
         <div className="flex flex-col sm:flex-row items-center sm:items-start justify-between gap-6 border-b border-slate-100 pb-6">
           

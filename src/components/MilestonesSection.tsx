@@ -24,31 +24,31 @@ export const MilestonesSection: React.FC<MilestonesSectionProps> = ({
   }
 
   return (
-    <div className="bg-gradient-to-br from-indigo-950 via-slate-900 to-slate-950 text-white rounded-3xl p-6 sm:p-8 shadow-xl border border-amber-400/30 relative overflow-hidden space-y-6">
+    <div className="bg-gradient-to-br from-purple-100 via-indigo-50 to-pink-100 text-slate-900 rounded-3xl p-6 sm:p-8 shadow-sm border border-purple-200/90 relative overflow-hidden space-y-6">
       
       {/* Background ambient lighting */}
-      <div className="absolute top-0 right-0 w-80 h-80 bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />
-      <div className="absolute bottom-0 left-0 w-80 h-80 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute top-0 right-0 w-80 h-80 bg-amber-200/30 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute bottom-0 left-0 w-80 h-80 bg-purple-200/30 rounded-full blur-3xl pointer-events-none" />
 
       {/* Header Banner */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-white/10 pb-5">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-purple-200/80 pb-5">
         <div>
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-400/20 text-amber-300 border border-amber-400/40 text-xs font-black uppercase tracking-wider mb-2">
-            <Sparkles className="w-3.5 h-3.5 fill-amber-300" />
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-200/80 text-amber-950 border border-amber-300 text-xs font-black uppercase tracking-wider mb-2">
+            <Sparkles className="w-3.5 h-3.5 fill-amber-700 text-amber-800" />
             <span>Sistema de Recompensas por 1,000 XP</span>
           </div>
-          <h2 className="text-xl sm:text-2xl font-black text-white tracking-tight flex items-center gap-2">
+          <h2 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight flex items-center gap-2">
             <span>🎁 Cofres del Milenio de XP</span>
           </h2>
-          <p className="text-xs text-slate-300 mt-1 max-w-xl">
+          <p className="text-xs text-slate-700 font-medium mt-1 max-w-xl">
             ¡Cada vez que alcanzas miles de Puntos de Experiencia (1,000 XP, 2,000 XP, 3,000 XP...), desbloqueas cofres legendarios con monedas de oro, medallas exclusivas y títulos de rango!
           </p>
         </div>
 
-        <div className="bg-white/10 backdrop-blur-md px-4 py-3 rounded-2xl border border-white/10 text-right shrink-0">
-          <span className="text-[10px] font-bold text-slate-400 uppercase block">XP Acumulados</span>
-          <span className="text-xl font-black text-amber-400 flex items-center justify-end gap-1">
-            <Zap className="w-5 h-5 text-amber-400 fill-amber-400" />
+        <div className="bg-white/90 backdrop-blur-md px-4 py-3 rounded-2xl border border-purple-200 text-right shrink-0 shadow-2xs">
+          <span className="text-[10px] font-bold text-slate-500 uppercase block">XP Acumulados</span>
+          <span className="text-xl font-black text-amber-700 flex items-center justify-end gap-1">
+            <Zap className="w-5 h-5 text-amber-500 fill-amber-500" />
             {user.xp} XP
           </span>
         </div>
@@ -97,20 +97,20 @@ export const MilestonesSection: React.FC<MilestonesSectionProps> = ({
               key={milestoneXp}
               className={`rounded-2xl p-4 border transition-all flex flex-col justify-between space-y-4 relative overflow-hidden ${
                 isReadyToClaim
-                  ? 'bg-gradient-to-b from-amber-500/20 via-slate-900 to-indigo-950 border-amber-400 shadow-lg ring-2 ring-amber-400/50'
+                  ? 'bg-gradient-to-b from-amber-100 via-white to-amber-50 border-amber-400 shadow-md ring-2 ring-amber-300'
                   : isClaimed
-                  ? 'bg-slate-900/60 border-emerald-500/40 text-slate-300'
-                  : 'bg-slate-900/40 border-white/10 text-slate-400'
+                  ? 'bg-emerald-50/90 border-emerald-300 text-slate-800'
+                  : 'bg-white/80 border-purple-200/80 text-slate-600'
               }`}
             >
               {/* Header Badge */}
               <div className="flex items-center justify-between">
-                <span className="text-xs font-black px-2.5 py-1 rounded-lg bg-white/10 border border-white/10 text-amber-300">
+                <span className="text-xs font-black px-2.5 py-1 rounded-lg bg-amber-100 border border-amber-300 text-amber-900">
                   {milestoneXp} XP
                 </span>
 
                 {isClaimed ? (
-                  <span className="inline-flex items-center gap-1 text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+                  <span className="inline-flex items-center gap-1 text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300">
                     <Check className="w-3 h-3" />
                     Reclamado
                   </span>
@@ -120,7 +120,7 @@ export const MilestonesSection: React.FC<MilestonesSectionProps> = ({
                     ¡Listo!
                   </span>
                 ) : (
-                  <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full bg-slate-800 text-slate-400">
+                  <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 border border-slate-200">
                     <Lock className="w-3 h-3" />
                     Bloqueado
                   </span>
@@ -130,20 +130,20 @@ export const MilestonesSection: React.FC<MilestonesSectionProps> = ({
               {/* Icon & Title */}
               <div className="space-y-1">
                 <div className="text-3xl mb-1">{reward.badgeIcon}</div>
-                <h3 className="text-sm font-extrabold text-white">{reward.badgeName}</h3>
-                <p className="text-[11px] text-slate-300">
+                <h3 className="text-sm font-black text-slate-900">{reward.badgeName}</h3>
+                <p className="text-[11px] text-slate-600 font-medium">
                   Otorgado al acumular {milestoneXp} XP en la plataforma.
                 </p>
               </div>
 
               {/* Rewards List */}
-              <div className="space-y-1.5 text-[11px] bg-slate-950/40 p-2.5 rounded-xl border border-white/5">
-                <div className="flex items-center gap-1.5 font-bold text-amber-300">
-                  <Coins className="w-3.5 h-3.5 fill-amber-300" />
+              <div className="space-y-1.5 text-[11px] bg-slate-50 p-2.5 rounded-xl border border-purple-200/80">
+                <div className="flex items-center gap-1.5 font-black text-amber-700">
+                  <Coins className="w-3.5 h-3.5 fill-amber-500 text-amber-600" />
                   <span>+{reward.coinsBonus} Monedas de Oro</span>
                 </div>
-                <div className="flex items-center gap-1.5 text-purple-300 font-bold truncate">
-                  <Crown className="w-3.5 h-3.5" />
+                <div className="flex items-center gap-1.5 text-purple-900 font-extrabold truncate">
+                  <Crown className="w-3.5 h-3.5 text-purple-700" />
                   <span className="truncate">{reward.titleUnlocked}</span>
                 </div>
               </div>
@@ -153,24 +153,24 @@ export const MilestonesSection: React.FC<MilestonesSectionProps> = ({
                 {isReadyToClaim ? (
                   <button
                     onClick={() => onClaimMilestone(milestoneXp)}
-                    className="w-full py-2.5 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-black text-xs shadow-md transition-transform hover:scale-102 cursor-pointer flex items-center justify-center gap-1.5"
+                    className="w-full py-2.5 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-black text-xs shadow-xs transition-transform hover:scale-102 cursor-pointer flex items-center justify-center gap-1.5 border border-amber-500"
                   >
                     <Gift className="w-3.5 h-3.5" />
                     <span>¡Abrir y Reclamar!</span>
                   </button>
                 ) : isClaimed ? (
-                  <div className="text-center py-2 text-xs font-bold text-emerald-400 bg-emerald-950/30 rounded-xl border border-emerald-500/20">
+                  <div className="text-center py-2 text-xs font-black text-emerald-800 bg-emerald-100 rounded-xl border border-emerald-300">
                     ✓ Recompensa Reclamada
                   </div>
                 ) : (
                   <div className="space-y-1">
-                    <div className="flex justify-between text-[10px] text-slate-400 font-medium">
+                    <div className="flex justify-between text-[10px] text-slate-600 font-bold">
                       <span>Progreso hacia {milestoneXp} XP</span>
                       <span>{user.xp} / {milestoneXp}</span>
                     </div>
-                    <div className="w-full h-2 bg-slate-800 rounded-full overflow-hidden p-0.5 border border-slate-700">
+                    <div className="w-full h-2 bg-slate-200 rounded-full overflow-hidden p-0.5 border border-slate-300">
                       <div
-                        className="h-full bg-gradient-to-r from-amber-500 to-amber-300 rounded-full transition-all duration-300"
+                        className="h-full bg-gradient-to-r from-amber-500 to-amber-400 rounded-full transition-all duration-300"
                         style={{ width: `${progressPercent}%` }}
                       />
                     </div>
@@ -184,14 +184,14 @@ export const MilestonesSection: React.FC<MilestonesSectionProps> = ({
       </div>
 
       {/* Next target info */}
-      <div className="bg-white/5 p-4 rounded-2xl border border-white/10 flex items-center justify-between text-xs text-slate-300">
+      <div className="bg-white/80 p-4 rounded-2xl border border-purple-200 flex items-center justify-between text-xs text-slate-800 shadow-2xs">
         <span className="flex items-center gap-2">
-          <Trophy className="w-4 h-4 text-amber-400 shrink-0" />
+          <Trophy className="w-4 h-4 text-amber-600 shrink-0" />
           <span>
-            Siguiente meta del Milenio: <strong className="text-amber-300 font-extrabold">{nextTarget} XP</strong>. Te faltan <strong className="text-emerald-400">{Math.max(0, nextTarget - user.xp)} XP</strong>.
+            Siguiente meta del Milenio: <strong className="text-indigo-900 font-black">{nextTarget} XP</strong>. Te faltan <strong className="text-emerald-700 font-black">{Math.max(0, nextTarget - user.xp)} XP</strong>.
           </span>
         </span>
-        <span className="hidden sm:inline font-mono text-[11px] text-slate-400">
+        <span className="hidden sm:inline font-bold text-[11px] text-slate-600">
           ¡Sigue completando desafíos para desbloquear más cofres!
         </span>
       </div>

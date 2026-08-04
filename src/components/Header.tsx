@@ -1,5 +1,5 @@
 import React from 'react';
-import { Key, LayoutDashboard, Target, Gamepad2, Calendar, FileText, User, Users, QrCode, Flame, Award, Timer, LogOut, Video } from 'lucide-react';
+import { Key, LayoutDashboard, Target, Gamepad2, Calendar, FileText, User, Users, QrCode, Flame, Award, Timer, LogOut, Video, Headphones, Smartphone } from 'lucide-react';
 import { UserProfile } from '../types';
 
 export type NavigationTab = 'dashboard' | 'challenges' | 'game' | 'calendar' | 'notes' | 'profile' | 'community';
@@ -10,6 +10,7 @@ interface HeaderProps {
   user: UserProfile;
   onOpenQrModal: () => void;
   onOpenFocusTimer: () => void;
+  onOpenMusicPlayer?: () => void;
   onOpenVideoTour?: () => void;
   onLogout?: () => void;
 }
@@ -20,17 +21,66 @@ export const Header: React.FC<HeaderProps> = ({
   user,
   onOpenQrModal,
   onOpenFocusTimer,
+  onOpenMusicPlayer,
   onOpenVideoTour,
   onLogout,
 }) => {
-  const navItems: { id: NavigationTab; label: string; icon: React.FC<{ className?: string }> }[] = [
-    { id: 'dashboard', label: 'Inicio', icon: LayoutDashboard },
-    { id: 'challenges', label: 'Desafíos', icon: Target },
-    { id: 'game', label: 'Arcade & Trivia', icon: Gamepad2 },
-    { id: 'calendar', label: 'Calendario', icon: Calendar },
-    { id: 'notes', label: 'Notas', icon: FileText },
-    { id: 'profile', label: 'Perfil & Logros', icon: User },
-    { id: 'community', label: 'Muro Estudiantil', icon: Users },
+  const navItems: {
+    id: NavigationTab;
+    label: string;
+    icon: React.FC<{ className?: string }>;
+    activeStyle: string;
+    iconActiveStyle: string;
+  }[] = [
+    {
+      id: 'dashboard',
+      label: 'Inicio',
+      icon: LayoutDashboard,
+      activeStyle: 'bg-emerald-100 text-emerald-950 border border-emerald-300 shadow-2xs font-black',
+      iconActiveStyle: 'text-emerald-700',
+    },
+    {
+      id: 'challenges',
+      label: 'Desafíos',
+      icon: Target,
+      activeStyle: 'bg-indigo-100 text-indigo-950 border border-indigo-300 shadow-2xs font-black',
+      iconActiveStyle: 'text-indigo-700',
+    },
+    {
+      id: 'game',
+      label: 'Arcade & Trivia',
+      icon: Gamepad2,
+      activeStyle: 'bg-amber-100 text-amber-950 border border-amber-300 shadow-2xs font-black',
+      iconActiveStyle: 'text-amber-800',
+    },
+    {
+      id: 'calendar',
+      label: 'Calendario',
+      icon: Calendar,
+      activeStyle: 'bg-sky-100 text-sky-950 border border-sky-300 shadow-2xs font-black',
+      iconActiveStyle: 'text-sky-700',
+    },
+    {
+      id: 'notes',
+      label: 'Notas',
+      icon: FileText,
+      activeStyle: 'bg-rose-100 text-rose-950 border border-rose-300 shadow-2xs font-black',
+      iconActiveStyle: 'text-rose-700',
+    },
+    {
+      id: 'profile',
+      label: 'Perfil & Logros',
+      icon: User,
+      activeStyle: 'bg-purple-100 text-purple-950 border border-purple-300 shadow-2xs font-black',
+      iconActiveStyle: 'text-purple-700',
+    },
+    {
+      id: 'community',
+      label: 'Muro Estudiantil',
+      icon: Users,
+      activeStyle: 'bg-teal-100 text-teal-950 border border-teal-300 shadow-2xs font-black',
+      iconActiveStyle: 'text-teal-700',
+    },
   ];
 
   return (
@@ -57,7 +107,7 @@ export const Header: React.FC<HeaderProps> = ({
         </div>
 
         {/* Navigation Tabs */}
-        <nav className="hidden lg:flex items-center gap-1 bg-slate-100/90 p-1 rounded-2xl border border-slate-200/80">
+        <nav className="hidden lg:flex items-center gap-1.5 bg-slate-100/90 p-1.5 rounded-2xl border border-slate-200/80">
           {navItems.map((item) => {
             const Icon = item.icon;
             const isActive = activeTab === item.id;
@@ -65,13 +115,13 @@ export const Header: React.FC<HeaderProps> = ({
               <button
                 key={item.id}
                 onClick={() => setActiveTab(item.id)}
-                className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs transition-all cursor-pointer ${
                   isActive
-                    ? 'bg-white text-indigo-700 shadow-xs border border-indigo-100'
-                    : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/60'
+                    ? item.activeStyle
+                    : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/60 font-semibold'
                 }`}
               >
-                <Icon className={`w-4 h-4 ${isActive ? 'text-indigo-600' : 'text-slate-400'}`} />
+                <Icon className={`w-4 h-4 ${isActive ? item.iconActiveStyle : 'text-slate-400'}`} />
                 <span>{item.label}</span>
               </button>
             );
@@ -90,6 +140,18 @@ export const Header: React.FC<HeaderProps> = ({
             <Timer className="w-4 h-4 text-indigo-600 animate-pulse" />
             <span className="hidden sm:inline">Modo Enfoque</span>
           </button>
+
+          {/* Spotify & Study Music Player Button */}
+          {onOpenMusicPlayer && (
+            <button
+              onClick={onOpenMusicPlayer}
+              className="inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 text-xs font-black transition-all cursor-pointer shadow-2xs"
+              title="Escuchar música de Spotify o playlists relajantes mientras estudias"
+            >
+              <Headphones className="w-4 h-4 text-emerald-600" />
+              <span className="hidden sm:inline">Música / Spotify</span>
+            </button>
+          )}
 
           {/* Video Explicativo Tour Button */}
           {onOpenVideoTour && (
@@ -151,13 +213,24 @@ export const Header: React.FC<HeaderProps> = ({
             </button>
 
             {onLogout && (
-              <button
-                onClick={onLogout}
-                className="p-1.5 rounded-xl text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer"
-                title="Cerrar sesión"
-              >
-                <LogOut className="w-4 h-4" />
-              </button>
+              <div className="flex items-center gap-1">
+                <button
+                  onClick={onLogout}
+                  className="inline-flex items-center gap-1 px-2 py-1.5 rounded-xl text-slate-600 hover:text-indigo-700 hover:bg-indigo-50 text-xs font-extrabold transition-colors cursor-pointer"
+                  title="Cambiar de cuenta o seleccionar otra cuenta guardada en el dispositivo"
+                >
+                  <Smartphone className="w-3.5 h-3.5 text-indigo-600" />
+                  <span className="hidden lg:inline text-[11px]">Cuentas</span>
+                </button>
+
+                <button
+                  onClick={onLogout}
+                  className="p-1.5 rounded-xl text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer"
+                  title="Cerrar sesión de esta cuenta"
+                >
+                  <LogOut className="w-4 h-4" />
+                </button>
+              </div>
             )}
           </div>
         </div>
@@ -165,7 +238,7 @@ export const Header: React.FC<HeaderProps> = ({
       </div>
 
       {/* Mobile Bottom Tab Bar */}
-      <div className="lg:hidden flex items-center justify-around border-t border-slate-200 bg-white px-2 py-1.5 overflow-x-auto no-scrollbar">
+      <div className="lg:hidden flex items-center justify-around border-t border-slate-200 bg-white/95 backdrop-blur-md px-2 py-1.5 overflow-x-auto no-scrollbar gap-1">
         {navItems.map((item) => {
           const Icon = item.icon;
           const isActive = activeTab === item.id;
@@ -173,11 +246,13 @@ export const Header: React.FC<HeaderProps> = ({
             <button
               key={item.id}
               onClick={() => setActiveTab(item.id)}
-              className={`flex flex-col items-center gap-0.5 px-2 py-1 rounded-xl text-[10px] font-bold transition-colors cursor-pointer shrink-0 ${
-                isActive ? 'text-indigo-700 bg-indigo-50 border border-indigo-100' : 'text-slate-500 hover:text-slate-900'
+              className={`flex flex-col items-center gap-0.5 px-2.5 py-1 rounded-xl text-[10px] transition-all cursor-pointer shrink-0 ${
+                isActive
+                  ? `${item.activeStyle}`
+                  : 'text-slate-500 hover:text-slate-900 font-semibold'
               }`}
             >
-              <Icon className="w-4 h-4" />
+              <Icon className={`w-4 h-4 ${isActive ? item.iconActiveStyle : ''}`} />
               <span>{item.label}</span>
             </button>
           );

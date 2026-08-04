@@ -86,6 +86,22 @@ export interface PostComment {
   timestamp: string;
   likes?: number;
   likedByMe?: boolean;
+  isHelpfulAnswer?: boolean;
+}
+
+export type PostType = 'logro' | 'pregunta' | 'encuesta' | 'tip' | 'recomendacion';
+
+export interface PollOption {
+  id: string;
+  text: string;
+  votes: number;
+}
+
+export interface PollData {
+  question: string;
+  options: PollOption[];
+  totalVotes: number;
+  votedOptionId?: string;
 }
 
 export interface CommunityPost {
@@ -105,6 +121,10 @@ export interface CommunityPost {
   repostedByMe?: boolean;
   originalAuthor?: string;
   reactionBadge?: string;
+  postType?: PostType;
+  subjectTag?: string;
+  pollData?: PollData;
+  isAnswered?: boolean;
 }
 
 export type QrColorTheme = 'slate' | 'emerald' | 'indigo' | 'amber' | 'rose';

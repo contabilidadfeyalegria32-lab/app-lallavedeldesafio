@@ -285,14 +285,14 @@ export const KeyMazeGame: React.FC<KeyMazeGameProps> = ({
   return (
     <div className="space-y-6 animate-in fade-in duration-200">
       
-      {/* Game Mode Switcher Tabs */}
-      <div className="flex items-center justify-center gap-2 bg-slate-900 p-2 rounded-2xl border border-indigo-500/30 max-w-md mx-auto shadow-md">
+      {/* Game Mode Switcher Tabs - Soft Warm Pastel Styling */}
+      <div className="flex items-center justify-center gap-2 bg-amber-100/80 p-2 rounded-2xl border border-amber-300 max-w-md mx-auto shadow-xs">
         <button
           onClick={() => setActiveGameMode('maze')}
           className={`flex-1 py-2.5 px-4 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-2 cursor-pointer ${
             activeGameMode === 'maze'
-              ? 'bg-amber-400 text-slate-950 shadow-md scale-102'
-              : 'text-slate-400 hover:text-white hover:bg-slate-800/80'
+              ? 'bg-amber-400 text-amber-950 shadow-xs scale-102 border border-amber-500'
+              : 'text-slate-700 hover:text-slate-900 hover:bg-amber-200/50'
           }`}
         >
           <Gamepad2 className="w-4 h-4" />
@@ -303,8 +303,8 @@ export const KeyMazeGame: React.FC<KeyMazeGameProps> = ({
           onClick={() => setActiveGameMode('trivia')}
           className={`flex-1 py-2.5 px-4 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-2 cursor-pointer ${
             activeGameMode === 'trivia'
-              ? 'bg-indigo-600 text-white shadow-md scale-102'
-              : 'text-slate-400 hover:text-white hover:bg-slate-800/80'
+              ? 'bg-indigo-600 text-white shadow-xs scale-102'
+              : 'text-slate-700 hover:text-slate-900 hover:bg-amber-200/50'
           }`}
         >
           <Brain className="w-4 h-4 text-amber-300" />
@@ -315,21 +315,21 @@ export const KeyMazeGame: React.FC<KeyMazeGameProps> = ({
       {activeGameMode === 'trivia' ? (
         <TriviaGame onEarnRewards={onEarnRewards} />
       ) : (
-        <div className="bg-white rounded-3xl border border-slate-200 shadow-lg p-6 sm:p-8 space-y-6">
+        <div className="bg-white rounded-3xl border border-amber-200/80 shadow-sm p-6 sm:p-8 space-y-6">
       
-      {/* Game Header Banner */}
+      {/* Game Header Banner - Soft Warm Yellow Pastel */}
 
-      <div className="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-white rounded-2xl p-6 shadow-md flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div className="bg-gradient-to-r from-amber-100 via-orange-50 to-amber-50 text-slate-900 rounded-2xl p-6 shadow-xs border border-amber-300 flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-400/20 text-amber-300 border border-amber-400/30 text-xs font-bold mb-2">
-            <Key className="w-3.5 h-3.5" />
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-200/80 text-amber-950 border border-amber-300 text-xs font-bold mb-2">
+            <Key className="w-3.5 h-3.5 text-amber-700" />
             <span>Mini-Juego Oficial Interactivo</span>
           </div>
-          <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-white flex items-center gap-2">
+          <h2 className="text-2xl sm:text-3xl font-black tracking-tight text-slate-900 flex items-center gap-2">
             <span>El Laberinto de la Llave</span>
-            <span className="text-xs bg-indigo-500 text-white px-2.5 py-0.5 rounded-full font-bold">Arcade</span>
+            <span className="text-xs bg-amber-300 text-amber-950 border border-amber-400 px-2.5 py-0.5 rounded-full font-black">Arcade</span>
           </h2>
-          <p className="text-xs text-slate-300 mt-1 max-w-xl leading-relaxed">
+          <p className="text-xs text-slate-700 font-medium mt-1 max-w-xl leading-relaxed">
             Navega por los niveles, esquiva trampas, junta tesoros y desbloquea el portal de salida para subir de nivel en la plataforma.
           </p>
         </div>

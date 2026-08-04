@@ -68,24 +68,24 @@ export const SmartCalendar: React.FC<SmartCalendarProps> = ({
   const selectedDayEvents = events.filter((ev) => ev.date === selectedDateStr);
 
   return (
-    <div className="bg-white rounded-2xl border border-slate-200/90 shadow-sm p-6 sm:p-8 space-y-6 animate-in fade-in duration-200">
+    <div className="bg-white rounded-2xl border border-sky-200/80 shadow-sm p-6 sm:p-8 space-y-6 animate-in fade-in duration-200">
       
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 pb-4">
+      {/* Header Banner - Soft Sky Blue Pastel */}
+      <div className="bg-gradient-to-r from-sky-100 via-blue-50 to-sky-50 rounded-2xl border border-sky-200/90 p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md bg-emerald-50 text-emerald-700 text-xs font-semibold mb-1">
-            <CalendarIcon className="w-3.5 h-3.5" />
+          <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md bg-sky-200/80 text-sky-950 text-xs font-bold mb-1">
+            <CalendarIcon className="w-3.5 h-3.5 text-sky-700" />
             <span>Calendario Inteligente de Hábitos</span>
           </div>
-          <h2 className="text-2xl font-bold text-slate-900 tracking-tight">Programación y Alarmas</h2>
-          <p className="text-xs text-slate-500 mt-0.5">
+          <h2 className="text-2xl font-black text-slate-900 tracking-tight">Programación & Agenda Escolar</h2>
+          <p className="text-xs text-slate-700 font-medium mt-0.5">
             Organiza tus eventos, citas, recordatorios y desafíos diarios sincronizados.
           </p>
         </div>
 
         <button
           onClick={() => setShowAddModal(true)}
-          className="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-semibold shadow-xs transition-colors cursor-pointer"
+          className="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-sky-600 hover:bg-sky-700 text-white rounded-xl text-xs font-black shadow-xs transition-colors cursor-pointer shrink-0"
         >
           <Plus className="w-4 h-4" />
           <span>Agregar Evento a la Fecha</span>

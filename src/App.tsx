@@ -9,6 +9,7 @@ import { UserProfileView } from './components/UserProfileView';
 import { CommunityFeed } from './components/CommunityFeed';
 import { QrModal } from './components/QrModal';
 import { FocusTimerModal } from './components/FocusTimerModal';
+import { SpotifyMusicPlayer } from './components/SpotifyMusicPlayer';
 import { AuthModal, AuthAccount } from './components/AuthModal';
 import { MilestoneRewardModal, MilestoneRewardData } from './components/MilestoneRewardModal';
 import { PlatformVideoTour } from './components/PlatformVideoTour';
@@ -29,17 +30,53 @@ import { Challenge, CalendarEvent, NoteItem, HighScore, CommunityPost, UserProfi
 export default function App() {
   const [activeTab, setActiveTab] = useState<NavigationTab>('dashboard');
   
+  // Default starter accounts if none exist in localStorage
+  const DEFAULT_SAVED_ACCOUNTS: AuthAccount[] = [
+    {
+      id: 'acc_demo_alex',
+      name: 'Alex Rivera',
+      username: '@alex_estudiante',
+      passwordHash: '1234',
+      avatarUrl: DEFAULT_AVATAR_URL,
+      profileData: INITIAL_USER_PROFILE,
+    },
+    {
+      id: 'acc_demo_sofia',
+      name: 'Sofía Ramírez',
+      username: '@sofia_estudiante',
+      passwordHash: '1234',
+      avatarUrl: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?auto=format&fit=crop&w=250&q=80',
+      profileData: {
+        ...INITIAL_USER_PROFILE,
+        name: 'Sofía Ramírez',
+        username: '@sofia_estudiante',
+        avatarUrl: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?auto=format&fit=crop&w=250&q=80',
+        level: 3,
+        xp: 950,
+        coins: 320,
+        streakDays: 5,
+        title: 'Estudiante VIP ⚡',
+      }
+    }
+  ];
+
   // Authentication & Session state
   const [savedAccounts, setSavedAccounts] = useState<AuthAccount[]>(() => {
     if (typeof window !== 'undefined') {
       const saved = localStorage.getItem('app_registered_accounts');
       if (saved) {
         try {
-          return JSON.parse(saved);
+          const parsed = JSON.parse(saved);
+          if (Array.isArray(parsed) && parsed.length > 0) return parsed;
         } catch (e) {
           console.error('Error loading saved accounts:', e);
         }
       }
+      // Populate defaults if none exist
+      try {
+        localStorage.setItem('app_registered_accounts', JSON.stringify(DEFAULT_SAVED_ACCOUNTS));
+      } catch (e) {}
+      return DEFAULT_SAVED_ACCOUNTS;
     }
     return [];
   });
@@ -78,13 +115,36 @@ export default function App() {
   const [communityPosts, setCommunityPosts] = useState<CommunityPost[]>(INITIAL_COMMUNITY_POSTS);
   const [isQrModalOpen, setIsQrModalOpen] = useState(false);
   const [isFocusTimerOpen, setIsFocusTimerOpen] = useState(false);
+  const [isMusicPlayerOpen, setIsMusicPlayerOpen] = useState(false);
   const [isVideoTourOpen, setIsVideoTourOpen] = useState(false);
 
-  // Sync user profile to localStorage
+  // Sync user profile to localStorage and keep savedAccounts up-to-date
   useEffect(() => {
     if (isAuthenticated && typeof window !== 'undefined') {
       try {
         localStorage.setItem('app_user_profile', JSON.stringify(user));
+        
+        // Update active account in saved accounts array
+        const activeId = localStorage.getItem('app_active_account_id');
+        setSavedAccounts((prevAccounts) => {
+          if (!prevAccounts || prevAccounts.length === 0) return prevAccounts;
+          const updated = prevAccounts.map((acc) => {
+            if (acc.id === activeId || acc.username.toLowerCase() === user.username.toLowerCase()) {
+              return {
+                ...acc,
+                name: user.name,
+                username: user.username,
+                avatarUrl: user.avatarUrl,
+                profileData: user,
+              };
+            }
+            return acc;
+          });
+          try {
+            localStorage.setItem('app_registered_accounts', JSON.stringify(updated));
+          } catch (e) {}
+          return updated;
+        });
       } catch (e) {
         console.error('Error saving user profile:', e);
       }
@@ -369,6 +429,67 @@ export default function App() {
     );
   };
 
+  const handleMarkHelpfulAnswer = (postId: string, commentId: string) => {
+    setCommunityPosts((prev) =>
+      prev.map((p) => {
+        if (p.id === postId && p.commentsList) {
+          const updatedComments = p.commentsList.map((c) => {
+            if (c.id === commentId) {
+              const newHelpfulState = !c.isHelpfulAnswer;
+              return { ...c, isHelpfulAnswer: newHelpfulState };
+            }
+            return c;
+          });
+          const hasHelpful = updatedComments.some((c) => c.isHelpfulAnswer);
+          return {
+            ...p,
+            commentsList: updatedComments,
+            isAnswered: hasHelpful,
+          };
+        }
+        return p;
+      })
+    );
+
+    handleEarnGameRewards(25, 10);
+  };
+
+  const handleVotePoll = (postId: string, optionId: string) => {
+    setCommunityPosts((prev) =>
+      prev.map((p) => {
+        if (p.id === postId && p.pollData) {
+          if (p.pollData.votedOptionId === optionId) return p;
+
+          const prevVotedId = p.pollData.votedOptionId;
+          const updatedOptions = p.pollData.options.map((opt) => {
+            if (opt.id === optionId) {
+              return { ...opt, votes: opt.votes + 1 };
+            }
+            if (opt.id === prevVotedId) {
+              return { ...opt, votes: Math.max(0, opt.votes - 1) };
+            }
+            return opt;
+          });
+
+          const newTotalVotes = prevVotedId ? p.pollData.totalVotes : p.pollData.totalVotes + 1;
+
+          return {
+            ...p,
+            pollData: {
+              ...p.pollData,
+              options: updatedOptions,
+              totalVotes: newTotalVotes,
+              votedOptionId: optionId,
+            },
+          };
+        }
+        return p;
+      })
+    );
+
+    handleEarnGameRewards(15, 5);
+  };
+
   const handleRepostPost = (postId: string, quoteText?: string) => {
     const originalPost = communityPosts.find((p) => p.id === postId);
     if (!originalPost) return;
@@ -426,8 +547,18 @@ export default function App() {
     );
   }
 
+  const tabBgGradients: Record<NavigationTab, string> = {
+    dashboard: 'bg-gradient-to-b from-emerald-50/80 via-teal-50/20 to-slate-50 border-t-2 border-emerald-300',
+    challenges: 'bg-gradient-to-b from-indigo-50/80 via-purple-50/20 to-slate-50 border-t-2 border-indigo-300',
+    game: 'bg-gradient-to-b from-amber-50/90 via-orange-50/20 to-slate-50 border-t-2 border-amber-300',
+    calendar: 'bg-gradient-to-b from-sky-50/90 via-blue-50/20 to-slate-50 border-t-2 border-sky-300',
+    notes: 'bg-gradient-to-b from-rose-50/80 via-pink-50/20 to-slate-50 border-t-2 border-rose-300',
+    profile: 'bg-gradient-to-b from-purple-50/90 via-fuchsia-50/20 to-slate-50 border-t-2 border-purple-300',
+    community: 'bg-gradient-to-b from-teal-50/90 via-cyan-50/20 to-slate-50 border-t-2 border-teal-300',
+  };
+
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-800 flex flex-col font-sans selection:bg-indigo-500 selection:text-white">
+    <div className={`min-h-screen text-slate-800 flex flex-col font-sans selection:bg-indigo-500 selection:text-white transition-colors duration-300 ${tabBgGradients[activeTab]}`}>
       
       {/* Navigation Header */}
       <Header
@@ -436,6 +567,7 @@ export default function App() {
         user={user}
         onOpenQrModal={() => setIsQrModalOpen(true)}
         onOpenFocusTimer={() => setIsFocusTimerOpen(true)}
+        onOpenMusicPlayer={() => setIsMusicPlayerOpen(true)}
         onOpenVideoTour={() => setIsVideoTourOpen(true)}
         onLogout={handleLogout}
       />
@@ -510,6 +642,8 @@ export default function App() {
             onAddComment={handleAddComment}
             onLikeComment={handleLikeComment}
             onRepostPost={handleRepostPost}
+            onVotePoll={handleVotePoll}
+            onMarkHelpfulAnswer={handleMarkHelpfulAnswer}
           />
         )}
       </main>
@@ -537,6 +671,12 @@ export default function App() {
         isOpen={isFocusTimerOpen}
         onClose={() => setIsFocusTimerOpen(false)}
         onEarnRewards={handleEarnGameRewards}
+      />
+
+      {/* Spotify & Study Music Player Modal / Mini-Player */}
+      <SpotifyMusicPlayer
+        isOpen={isMusicPlayerOpen}
+        onClose={() => setIsMusicPlayerOpen(false)}
       />
 
       {/* Platform Interactive Video Tour Modal */}
