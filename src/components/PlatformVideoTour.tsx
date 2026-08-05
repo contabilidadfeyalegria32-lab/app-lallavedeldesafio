@@ -80,17 +80,17 @@ const CHAPTERS: Chapter[] = [
     duration: 22,
     icon: Gamepad2,
     badge: 'Aprende Jugando',
-    summary: 'Laberintos y cuestionarios de preguntas',
-    narrationText: 'La sección Arcade & Trivia combina el entretenimiento con la consolidación del conocimiento. Incluye el juego del Laberinto de las Llaves y un banco interactivo de preguntas de Escuela, Ciencia, Tecnología y Lógica con comodines 50/50 y explicaciones educativas.',
+    summary: 'Laberinto 2D, Trivia de Preguntas y Pupiletras',
+    narrationText: 'La sección Arcade combina el entretenimiento con el aprendizaje. Incluye el Laberinto de las Llaves 2D, el Banco de Trivia Estudiantil con comodines y el juego de Pupiletras Estudiantil para encontrar palabras clave educativas.',
     targetTab: 'game',
     visualHighlight: {
-      title: 'Arcade & Banco de Trivia',
-      description: 'Refuerza lo aprendido en clase resolviendo trivias y superando el laberinto.',
+      title: 'Arcade, Trivia & Pupiletras Estudiantil',
+      description: 'Refuerza lo aprendido en clase superando el laberinto, resolviendo trivias y completando pupiletras.',
       bullets: [
-        'Preguntas dinámicas sin repetición por categorías',
-        'Comodines de ayuda: 50/50 y Pista del Sabio',
-        'Posibilidad de agregar preguntas propias al banco',
-        'Juego arcade El Laberinto de las Llaves'
+        'Laberinto 2D con llaves y portales de salida',
+        'Trivia estudiantil con preguntas de Ciencia, Historia y Lógica',
+        'Sopa de letras / Pupiletras Estudiantil por áreas académicas',
+        'Premios de XP y Monedas para subir de rango'
       ],
       accentColor: 'from-amber-400 to-emerald-500',
       bgGradient: 'from-amber-950/80 via-slate-900 to-slate-950',

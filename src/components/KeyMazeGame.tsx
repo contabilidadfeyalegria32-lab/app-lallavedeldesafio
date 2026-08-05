@@ -3,9 +3,10 @@ import { HighScore } from '../types';
 import confetti from 'canvas-confetti';
 import { playAudioEffect } from '../utils/audio';
 import { TriviaGame } from './TriviaGame';
+import { WordSearchGame } from './WordSearchGame';
 import {
   Key, Gamepad2, Timer, Trophy, ArrowUp, ArrowDown, ArrowLeft, ArrowRight,
-  Sparkles, Coins, Award, Shield, Volume2, VolumeX, Flame, RefreshCw, Zap, Brain
+  Sparkles, Coins, Award, Shield, Volume2, VolumeX, Flame, RefreshCw, Zap, Brain, Search
 } from 'lucide-react';
 
 interface KeyMazeGameProps {
@@ -100,7 +101,7 @@ export const KeyMazeGame: React.FC<KeyMazeGameProps> = ({
   highScores,
   onAddHighScore,
 }) => {
-  const [activeGameMode, setActiveGameMode] = useState<'maze' | 'trivia'>('maze');
+  const [activeGameMode, setActiveGameMode] = useState<'maze' | 'trivia' | 'pupiletras'>('maze');
   const [levelIdx, setLevelIdx] = useState(0);
   const [grid, setGrid] = useState<number[][]>([]);
 
@@ -286,10 +287,10 @@ export const KeyMazeGame: React.FC<KeyMazeGameProps> = ({
     <div className="space-y-6 animate-in fade-in duration-200">
       
       {/* Game Mode Switcher Tabs - Soft Warm Pastel Styling */}
-      <div className="flex items-center justify-center gap-2 bg-amber-100/80 p-2 rounded-2xl border border-amber-300 max-w-md mx-auto shadow-xs">
+      <div className="flex flex-wrap items-center justify-center gap-2 bg-amber-100/80 p-2 rounded-2xl border border-amber-300 max-w-xl mx-auto shadow-xs">
         <button
           onClick={() => setActiveGameMode('maze')}
-          className={`flex-1 py-2.5 px-4 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-2 cursor-pointer ${
+          className={`flex-1 min-w-[120px] py-2.5 px-3 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-2 cursor-pointer ${
             activeGameMode === 'maze'
               ? 'bg-amber-400 text-amber-950 shadow-xs scale-102 border border-amber-500'
               : 'text-slate-700 hover:text-slate-900 hover:bg-amber-200/50'
@@ -301,7 +302,7 @@ export const KeyMazeGame: React.FC<KeyMazeGameProps> = ({
 
         <button
           onClick={() => setActiveGameMode('trivia')}
-          className={`flex-1 py-2.5 px-4 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-2 cursor-pointer ${
+          className={`flex-1 min-w-[120px] py-2.5 px-3 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-2 cursor-pointer ${
             activeGameMode === 'trivia'
               ? 'bg-indigo-600 text-white shadow-xs scale-102'
               : 'text-slate-700 hover:text-slate-900 hover:bg-amber-200/50'
@@ -310,10 +311,24 @@ export const KeyMazeGame: React.FC<KeyMazeGameProps> = ({
           <Brain className="w-4 h-4 text-amber-300" />
           <span>🧠 Trivia Estudiantil</span>
         </button>
+
+        <button
+          onClick={() => setActiveGameMode('pupiletras')}
+          className={`flex-1 min-w-[120px] py-2.5 px-3 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-2 cursor-pointer ${
+            activeGameMode === 'pupiletras'
+              ? 'bg-amber-500 text-slate-950 shadow-xs scale-102 border border-amber-600'
+              : 'text-slate-700 hover:text-slate-900 hover:bg-amber-200/50'
+          }`}
+        >
+          <Search className="w-4 h-4 text-slate-900" />
+          <span>🔤 Pupiletras</span>
+        </button>
       </div>
 
       {activeGameMode === 'trivia' ? (
         <TriviaGame onEarnRewards={onEarnRewards} />
+      ) : activeGameMode === 'pupiletras' ? (
+        <WordSearchGame onEarnRewards={onEarnRewards} />
       ) : (
         <div className="bg-white rounded-3xl border border-amber-200/80 shadow-sm p-6 sm:p-8 space-y-6">
       
